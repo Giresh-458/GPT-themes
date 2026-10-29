@@ -1,4 +1,4 @@
-import { THEMES, DEFAULT_SETTINGS, getTheme, sanitizeSettings } from "../src/themes.js";
+import { THEMES, getTheme, sanitizeSettings } from "../src/themes.js";
 import { loadSettings, saveSettings, resetSettings, saveWallpaper, getWallpaperDataUrl, deleteWallpaper } from "../src/storage.js";
 
 const $ = id => document.getElementById(id);
@@ -6,16 +6,16 @@ let committed = await loadSettings();
 let draft = structuredClone(committed);
 let previewTimer = null;
 
-const themeGrid = $("themeGrid");
 const saveStatus = $("saveStatus");
 const toast = $("toast");
+let toastTimer = null;
 
 function tell(message, isError = false) {
   toast.textContent = message;
   toast.style.borderColor = isError ? "#ff9eac88" : "#ffffff27";
   toast.classList.add("visible");
-  window.clearTimeout(tell.timer);
-  tell.timer = window.setTimeout(() => toast.classList.remove("visible"), 2600);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
 }
 
 function setStatus(text) { saveStatus.textContent = text; }
@@ -25,7 +25,8 @@ function themeSwatch(theme) {
 }
 
 function renderThemes() {
-  themeGrid.replaceChildren();
+  const grid = $("themeGrid");
+  grid.replaceChildren();
   for (const theme of THEMES) {
     const button = document.createElement("button");
     button.type = "button";
@@ -39,14 +40,13 @@ function renderThemes() {
     name.className = "theme-name";
     name.textContent = theme.name.replace(" Glass", "");
     button.append(swatch, name);
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       draft.activeThemeId = theme.id;
       if (draft.wallpaper.kind !== "custom") draft.wallpaper = { kind: "built-in", id: theme.wallpaper };
       syncControls();
-      renderThemes();
-      persistDraft();
+      await persistDraft();
     });
-    themeGrid.append(button);
+    grid.append(button);
   }
 }
 
@@ -63,13 +63,12 @@ function syncControls() {
 }
 
 async function sendToActiveTab(message) {
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tab = tabs[0];
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id || !/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//.test(tab.url || "")) return;
   try {
     await chrome.tabs.sendMessage(tab.id, message);
   } catch {
-    // Page may have been loaded before installation; reload is required for the content script.
+    // The tab may have been opened before installation. Reload it to inject the content script.
   }
 }
 
@@ -79,6 +78,8 @@ async function applyPreview() {
   const url = await getWallpaperDataUrl(draft.wallpaper);
   if (url) {
     await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_WALLPAPER", dataUrl: url });
+  } else {
+    await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_CLEAR_WALLPAPER" });
   }
 }
 
@@ -110,6 +111,7 @@ function renderPresets() {
     item.className = "preset-item";
     const name = document.createElement("span");
     name.textContent = preset.name;
+
     const use = document.createElement("button");
     use.type = "button";
     use.textContent = "Apply";
@@ -120,6 +122,7 @@ function renderPresets() {
       syncControls();
       await persistDraft();
     });
+
     const rename = document.createElement("button");
     rename.type = "button";
     rename.textContent = "Rename";
@@ -132,6 +135,7 @@ function renderPresets() {
       await persistDraft();
       syncControls();
     });
+
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "Delete";
@@ -205,7 +209,6 @@ $("resetButton").addEventListener("click", async () => {
   committed = structuredClone(draft);
   await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_RESET" });
   syncControls();
-  await applyPreview();
   setStatus("Reset");
   tell("Theme settings reset. Saved presets were preserved.");
 });
@@ -216,6 +219,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
       committed = settings;
       draft = structuredClone(settings);
       syncControls();
+      applyPreview();
     });
   }
 });
