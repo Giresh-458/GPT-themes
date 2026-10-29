@@ -90,4 +90,8 @@ This is evidence that the theme message applied variables and main CSS, but also
 
 Next: reload the unpacked extension (not just the ChatGPT tab), reload ChatGPT, select a theme again, and inspect `getComputedStyle(document.querySelector('main')).backgroundImage` plus a fresh screenshot. Inspect current sidebar/composer DOM on the exact page state before adding additional selectors.
 
+
+## Screenshot follow-up (2026-10-29)
+The user's latest screenshot shows that the selected SVG wallpaper now renders on the main page, but opaque dark/black child surfaces still cover a wide central band. This indicates wallpaper loading works; remaining issue is child wrapper backgrounds obscuring it. Updated `content/theme.css` to make the previously observed `MainContentClip-*` and `Workspace-*` wrappers transparent while preserving layout, positioning, scrolling, and z-index. This is a targeted hypothesis based on the earlier live DOM chain, not yet verified in Chrome. Reload the extension and page, then check the central band and composer behavior. Do not mark fixed until verified.
+
 Do not report any unverified requirement as complete.
