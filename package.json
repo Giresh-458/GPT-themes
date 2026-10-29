@@ -1,10 +1,10 @@
 {
   "name": "chatgpt-theme-studio",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node tests/theme-tests.mjs",
-    "check": "node --check popup/popup.js && node --check content/content.js && node --check src/themes.js && node --check src/storage.js"
+    "check": "node --check background.js && node --check popup/popup.js && node --check content/content.js && node --check src/themes.js && node --check src/storage.js"
   }
 }
