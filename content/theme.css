@@ -130,4 +130,12 @@ html[data-chatgpt-theme-studio="true"] main form {
   -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
+/* Logged-out/responsive sidebar fallback: the nav's direct layout parent. */
+html[data-chatgpt-theme-studio="true"] body div:has(> nav[role="navigation"]) {
+  background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.78)) !important;
+  color: var(--gpts-text, #f7f5ff);
+  border-right: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
+  -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
+  backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
+}
 
