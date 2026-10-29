@@ -112,3 +112,6 @@ Added a static Unsplash alpine-lake sunset photograph as the default Twilight wa
 ## Static CI added
 Added a GitHub Actions workflow to run the Node theme tests, JavaScript syntax checks, and manifest JSON parsing on pushes to main and pull requests. The workflow's actual run result must be checked in GitHub Actions; its presence alone is not a passed test.
 
+## Cross-layout follow-up
+The runtime occluder scan now examines large opaque layout containers across the document rather than only descendants of `main`, and identifies the full-height sidebar ancestor from the navigation landmark instead of relying on a specific class or tag. These dynamic selectors are constrained by size, opacity, and exclusions for message/card/composer/control elements, but they remain heuristics and need regression testing on the actual logged-in target page.
+
