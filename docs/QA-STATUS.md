@@ -1,35 +1,47 @@
-# QA status — initial implementation
+# QA status — fresh implementation branch
 
-Date: 2026-10-29
+Audit date: 2026-10-29
 
 ## Repository audit
-- The supplied GitHub repository was empty at the start: no commits, no branches, and no source files.
-- A fresh baseline has been added to `main`, then the implementation branch was created from that baseline.
-- No pre-existing source has been replaced.
+- The repository was empty at the start: no commits, branches, or source files.
+- A first README commit was added to main, and implementation work is isolated in `feat/fresh-theme-studio`.
+- Pull request: https://github.com/Giresh-458/GPT-themes/pull/1
+- No existing production source was overwritten.
 
-## Test status
+## Verification status
 
-| Test | Status | Evidence / limitation |
+| Test | Result | Evidence / limitation |
 |---|---|---|
-| Theme logic unit tests | Pending local execution | Five-theme configuration and sanitization tests added in `tests/theme-tests.mjs`. |
-| JavaScript syntax | Pending local execution | `npm run check` added. |
-| Manifest/resource integrity | Pending | Must validate against Chrome's actual extension loader. |
-| ZIP integrity and extracted smoke test | Pending | No package archive generated yet. |
+| Repository baseline and file tree | Passed (remote inspection) | GitHub tree API confirms source files on implementation branch. |
+| Unit tests | Not run | Container cannot resolve github.com to clone the branch; connector tools cannot execute Node tests. |
+| JavaScript syntax | Not run | Must run `npm run check` in a local Node environment. |
+| Manifest validity | Partially reviewed, not Chrome-validated | JSON is visible in repository, but not loaded by Chrome yet. |
+| Chrome extension load | Blocked | No Chrome runtime connected to this working environment. |
 | Authenticated ChatGPT DOM inspection | Blocked | No authenticated browser/DevTools session available through repository connector. |
-| Composer modes and sending | Blocked | Requires testing on actual ChatGPT in Chrome. |
-| Visual screenshot comparison | Blocked | Requires real browser screenshots; no mock screenshots are claimed as actual output. |
-| Console error attribution | Blocked | Requires before/after console captures with extension enabled and disabled. |
-| Accessibility contrast measurement | Pending | Must measure foreground/background combinations in real rendered states. |
+| Composer normal mode and send | Blocked | Must test in actual ChatGPT page. |
+| Special-mode activation/reset | Blocked | Must test with image-generation mode and standard text mode in Chrome. |
+| Screenshot capture and reference comparison | Blocked | No real browser captures have been made. The uploaded mockup is only the design reference. |
+| Console errors before/after | Blocked | Requires console collection with extension disabled and enabled. |
+| Contrast/accessibility measurement | Not run | Requires rendered colors and controls from live target page. |
+| Installable ZIP and source ZIP integrity | Not run | Not packaged in this environment; no checksum is claimed. |
 
-## Conservative behavior
-The first content script only defines extension-owned CSS tokens and a root marker. It intentionally does not invent selectors for sidebar, message bubbles, or composer. Therefore the complete page-wide glass appearance is not yet implemented. That work is gated on real DOM evidence.
+## Implemented baseline
+- Manifest V3 with storage permission and explicit host scope for ChatGPT.
+- Five built-in palette definitions.
+- Settings validation and numeric bounds.
+- Popup theme gallery, glass sliders, local custom wallpaper upload, preset save/rename/apply/delete, reset, and apply/cancel actions.
+- Local wallpaper storage, with no external image upload.
+- Root CSS variables and an extension-owned wallpaper layer.
+- Theme sanitization tests and a DOM evidence collection guide.
 
-## Known limitations
-- The current page stylesheet does not yet attach glass surfaces to actual ChatGPT sidebar or conversation elements.
-- The wallpaper background layer's stacking and visibility must be checked in Chrome before deciding whether adjustments are needed.
-- The popup's sliders persist updates automatically; a formal reversible preview/apply/cancel transaction still needs implementation.
-- Only custom wallpaper files are validated and stored locally; complete cleanup, orphan reclamation, and synchronization fallback messaging need additional tests.
-- Settings sync uses a safe local fallback if sync storage rejects writes. Cross-device behavior has not been verified.
-- Live browser tests, actual screenshots, console comparison, installable ZIP and source ZIP are not yet verified/delivered.
+## Current limitations
+1. Theme IDs and palettes exist, but built-in wallpaper artwork has not yet been bundled. Built-in themes currently render color swatches, not five complete landscape/atmosphere wallpapers.
+2. Actual sidebar, message, composer, menu, and code-block surfaces are not styled yet. This is intentional until real DOM selector evidence is supplied.
+3. Wallpaper layer stacking/visibility is unverified and may not be visible above the site's painted background.
+4. Preview/cancel is implemented at the settings level but custom wallpaper lifecycle and close/reopen edge cases have not been exercised.
+5. Settings sync quota handling/fallback and cross-device behavior are untested.
+6. Custom wallpaper validation currently checks MIME type, size, and data URL format. It does not yet decode the image to independently verify image dimensions.
+7. Manifest permissions and popup tab messaging still need validation in Chrome.
+8. No live-browser screenshots, console attribution report, installable ZIP, source ZIP, or SHA-256 checksum have been produced.
 
-Do not report any blocked or pending check as passed.
+No blocked or pending check should be represented as passed.
