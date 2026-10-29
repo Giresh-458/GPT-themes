@@ -196,4 +196,13 @@
     }
     return true;
   });
+  // The ready handshake lets the service worker apply saved settings only after
+  // this listener exists, avoiding a race with document_idle injection.
+  try {
+    chrome.runtime.sendMessage({ type: "CHATGPT_THEME_STUDIO_CONTENT_READY" }, () => {
+      void chrome.runtime.lastError;
+    });
+  } catch {
+    // The popup can still apply settings if the service worker is unavailable.
+  }
 })();
