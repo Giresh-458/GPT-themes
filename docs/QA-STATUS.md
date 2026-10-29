@@ -4,44 +4,43 @@ Audit date: 2026-10-29
 
 ## Repository audit
 - The repository was empty at the start: no commits, branches, or source files.
-- A first README commit was added to main, and implementation work is isolated in `feat/fresh-theme-studio`.
-- Pull request: https://github.com/Giresh-458/GPT-themes/pull/1
+- A first README commit was added to `main`; implementation is isolated in `feat/fresh-theme-studio`.
+- Draft PR: https://github.com/Giresh-458/GPT-themes/pull/1
 - No existing production source was overwritten.
 
 ## Verification status
 
 | Test | Result | Evidence / limitation |
 |---|---|---|
-| Repository baseline and file tree | Passed (remote inspection) | GitHub tree API confirms source files on implementation branch. |
-| Unit tests | Not run | Container cannot resolve github.com to clone the branch; connector tools cannot execute Node tests. |
-| JavaScript syntax | Not run | Must run `npm run check` in a local Node environment. |
-| Manifest validity | Partially reviewed, not Chrome-validated | JSON is visible in repository, but not loaded by Chrome yet. |
-| Chrome extension load | Blocked | No Chrome runtime connected to this working environment. |
+| Repository baseline and file tree | Passed (remote inspection) | GitHub tree API confirms implementation files exist on branch. |
+| Unit tests | Not run | Container cannot resolve github.com to clone branch; GitHub connector cannot execute Node test scripts. |
+| JavaScript syntax | Not run | Run `npm run check` in a local Node environment. |
+| Manifest validity | JSON visually reviewed, Chrome validation pending | Not loaded in Chrome yet. |
+| Chrome extension load | Blocked | No Chrome runtime is connected to this environment. |
 | Authenticated ChatGPT DOM inspection | Blocked | No authenticated browser/DevTools session available through repository connector. |
-| Composer normal mode and send | Blocked | Must test in actual ChatGPT page. |
-| Special-mode activation/reset | Blocked | Must test with image-generation mode and standard text mode in Chrome. |
-| Screenshot capture and reference comparison | Blocked | No real browser captures have been made. The uploaded mockup is only the design reference. |
-| Console errors before/after | Blocked | Requires console collection with extension disabled and enabled. |
-| Contrast/accessibility measurement | Not run | Requires rendered colors and controls from live target page. |
-| Installable ZIP and source ZIP integrity | Not run | Not packaged in this environment; no checksum is claimed. |
+| Composer normal mode and send | Blocked | Must test on actual ChatGPT page. |
+| Special-mode activation/reset | Blocked | Must test image-generation mode and standard text mode in Chrome. |
+| Screenshot capture/reference comparison | Blocked | No real browser screenshots have been captured. The uploaded mockup remains a reference only. |
+| Console error comparison | Blocked | Requires captures with extension disabled and enabled. |
+| Contrast/accessibility measurement | Not run | Needs rendered colors and controls from the live page and popup. |
+| ZIP integrity/checksums | Not run | No verified archive produced in this environment. |
 
 ## Implemented baseline
-- Manifest V3 with storage permission and explicit host scope for ChatGPT.
-- Five built-in palette definitions.
-- Settings validation and numeric bounds.
-- Popup theme gallery, glass sliders, local custom wallpaper upload, preset save/rename/apply/delete, reset, and apply/cancel actions.
-- Local wallpaper storage, with no external image upload.
-- Root CSS variables and an extension-owned wallpaper layer.
-- Theme sanitization tests and a DOM evidence collection guide.
+- Manifest V3; storage permission and ChatGPT host scope.
+- Five theme palettes and numeric setting sanitization.
+- Popup gallery, transparency/blur/overlay sliders, local wallpaper upload, custom presets, explicit apply/cancel, and reset.
+- Custom wallpaper storage stays local and is not sent to external services.
+- Extension-owned CSS variables and wallpaper layer.
+- Initial tests and a targeted DOM evidence collection guide.
 
-## Current limitations
-1. Theme IDs and palettes exist, but built-in wallpaper artwork has not yet been bundled. Built-in themes currently render color swatches, not five complete landscape/atmosphere wallpapers.
-2. Actual sidebar, message, composer, menu, and code-block surfaces are not styled yet. This is intentional until real DOM selector evidence is supplied.
-3. Wallpaper layer stacking/visibility is unverified and may not be visible above the site's painted background.
-4. Preview/cancel is implemented at the settings level but custom wallpaper lifecycle and close/reopen edge cases have not been exercised.
-5. Settings sync quota handling/fallback and cross-device behavior are untested.
-6. Custom wallpaper validation currently checks MIME type, size, and data URL format. It does not yet decode the image to independently verify image dimensions.
-7. Manifest permissions and popup tab messaging still need validation in Chrome.
-8. No live-browser screenshots, console attribution report, installable ZIP, source ZIP, or SHA-256 checksum have been produced.
+## Known limitations / risks
+1. Built-in wallpaper artwork is not bundled. Built-in themes currently define palettes and wallpaper IDs; they are not complete wallpaper presets.
+2. Actual sidebar, user message, assistant message, composer, menu, and code-block surfaces are not styled. This is deliberately gated on real DOM selector evidence.
+3. Wallpaper pseudo-element stacking and visibility against the site's own painted backgrounds remain unverified.
+4. Preview/apply/cancel code has been added but not exercised in browser. Custom wallpaper preview assets are stored locally before Apply and cleaned best-effort on Cancel.
+5. Sync quota fallback and cross-device behavior are not tested. If sync fails on a fresh device, local fallback settings are device-local.
+6. Image validation checks MIME, size, and base64 data URL format but not decoded image dimensions/content.
+7. Node syntax/unit tests could not run because direct GitHub clone failed due to DNS/network resolution in this environment.
+8. No actual screenshots, extension console attribution report, installable ZIP, source ZIP, or SHA-256 checksum have been produced.
 
-No blocked or pending check should be represented as passed.
+Do not represent blocked or pending checks as passed.
