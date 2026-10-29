@@ -39,17 +39,18 @@
     root().style.setProperty("--gpts-muted", cssColor(colors.muted, "#d5d4ea"));
     const surface = cssColor(colors.surface, "rgba(30, 42, 86, 0.79)");
     const surfaceStrong = cssColor(colors.surfaceStrong, "rgba(25, 34, 69, 0.91)");
-    const transparency = clamp(custom.transparency, 45, 96, 79) / 100;
+    // The UI is a transparency percentage: higher values must reduce surface opacity.
+    const surfaceOpacity = 1 - clamp(custom.transparency, 45, 96, 79) / 100;
     root().style.setProperty("--gpts-surface", surface);
     root().style.setProperty("--gpts-surface-strong", surfaceStrong);
-    root().style.setProperty("--gpts-surface-effective", withOpacity(surface, transparency));
-    root().style.setProperty("--gpts-surface-strong-effective", withOpacity(surfaceStrong, transparency));
+    root().style.setProperty("--gpts-surface-effective", withOpacity(surface, surfaceOpacity));
+    root().style.setProperty("--gpts-surface-strong-effective", withOpacity(surfaceStrong, surfaceOpacity));
     root().style.setProperty("--gpts-border", cssColor(colors.border, "rgba(226, 228, 255, 0.27)"));
     root().style.setProperty("--gpts-accent", cssColor(colors.accent, "#b6c7ff"));
     root().style.setProperty("--gpts-shadow", cssColor(colors.shadow, "rgba(5, 9, 34, 0.34)"));
     root().style.setProperty("--gpts-blur", clamp(custom.blur, 0, 30, 18) + "px");
     root().style.setProperty("--gpts-overlay", String(clamp(custom.overlay, 0, 0.7, 0.26)));
-    root().style.setProperty("--gpts-transparency", String(Math.round(transparency * 100)));
+    root().style.setProperty("--gpts-transparency", String(Math.round((1 - surfaceOpacity) * 100)));
     root().style.setProperty("--gpts-border-strength", String(clamp(custom.borderStrength, 0, 2, 1)));
     root().style.setProperty("--gpts-shadow-strength", String(clamp(custom.shadowStrength, 0, 2, 1)));
     startWrapperObserver();
