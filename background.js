@@ -57,6 +57,20 @@ async function applyToOpenChatGPTTabs() {
     .map(tab => applyToTab(tab.id, tab.url)));
 }
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "CHATGPT_THEME_STUDIO_CONTENT_READY" || !Number.isInteger(sender.tab?.id)) return;
+  const url = sender.tab.url;
+  if (!isChatGPTUrl(url)) {
+    sendResponse({ ok: false, error: "Unsupported page." });
+    return;
+  }
+  void applyToTab(sender.tab.id, url).then(
+    () => sendResponse({ ok: true }),
+    () => sendResponse({ ok: false, error: "Could not restore saved theme." })
+  );
+  return true;
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete" && isChatGPTUrl(tab.url)) {
     void applyToTab(tabId, tab.url);
