@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
 const backgroundSource = readFileSync(new URL("../background.js", import.meta.url), "utf8");
 const contentSource = readFileSync(new URL("../content/content.js", import.meta.url), "utf8");
+const stylesheet = readFileSync(new URL("../content/theme.css", import.meta.url), "utf8");
 assert.equal(manifest.manifest_version, 3, "extension must use Manifest V3");
 assert.equal(manifest.background?.service_worker, "background.js", "saved themes must restore through the service worker");
 assert.equal(manifest.background?.type, "module", "service worker must support ES module imports");
@@ -11,7 +12,10 @@ assert.ok(manifest.permissions.includes("storage"), "storage permission is requi
 assert.ok(manifest.content_scripts.some(script => script.matches.includes("https://chatgpt.com/*")), "content script must target ChatGPT");
 assert.ok(backgroundSource.includes("CHATGPT_THEME_STUDIO_CONTENT_READY"), "service worker must support the content-script readiness handshake");
 assert.ok(contentSource.includes("CHATGPT_THEME_STUDIO_CONTENT_READY"), "content script must request saved settings after its listener is ready");
-console.log("PASS: extension manifest and persistent theme restoration wiring");
+assert.ok(contentSource.includes("surfaceOpacity = 1 - clamp(custom.transparency"), "higher transparency values must reduce surface opacity");
+assert.ok(stylesheet.includes("linear-gradient(") && stylesheet.includes("var(--gpts-overlay"), "contrast overlay must darken the wallpaper rather than hide it");
+assert.ok(contentSource.includes("setTimeout(() => {") && contentSource.includes("function mutationCanAffectLayout"), "wrapper rescans must be throttled and ignore content-heavy regions");
+console.log("PASS: extension manifest, persistence, transparency, overlay, and scan guard wiring");
 import { DEFAULT_SETTINGS, THEMES, WALLPAPERS, REMOTE_WALLPAPERS, sanitizeSettings, clampNumber, getTheme } from "../src/themes.js";
 
 assert.equal(THEMES.length, 5, "exactly five built-in themes");
