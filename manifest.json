@@ -6,7 +6,8 @@
   "permissions": ["storage"],
   "host_permissions": [
     "https://chatgpt.com/*",
-    "https://chat.openai.com/*"
+    "https://chat.openai.com/*",
+    "https://images.unsplash.com/*"
   ],
   "action": {
     "default_title": "ChatGPT Theme Studio",
