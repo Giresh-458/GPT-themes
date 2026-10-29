@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "ChatGPT Theme Studio",
+  "version": "0.1.0",
+  "description": "A privacy-first glassmorphism theme studio for ChatGPT.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*"
+  ],
+  "action": {
+    "default_title": "ChatGPT Theme Studio",
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": ["content/content.js"],
+      "css": ["content/theme.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+  }
+}
