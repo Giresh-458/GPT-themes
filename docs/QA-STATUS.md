@@ -109,3 +109,6 @@ Replaced the accumulated experimental CSS rules with a scoped glassmorphism laye
 ## Default photo wallpaper and glass UI alignment (2026-10-29)
 Added a static Unsplash alpine-lake sunset photograph as the default Twilight wallpaper to better match the supplied reference image. Popup selection routes this wallpaper through a dedicated message, and the content script only accepts the exact allowlisted image origin and path. Other themes remain bundled SVGs; custom uploaded wallpapers remain local. This means Twilight makes a normal network request to `images.unsplash.com`; README privacy notes were updated. This source change is not a substitute for browser verification, and ChatGPT CSP/network behavior must be tested live. The full-page glass layer, effective transparency calculation, and large-opaque-wrapper observer are now in place. Still unverified: runtime screenshot, composer typing/send, special image mode, responsive layouts, and contrast.
 
+## Static CI added
+Added a GitHub Actions workflow to run the Node theme tests, JavaScript syntax checks, and manifest JSON parsing on pushes to main and pull requests. The workflow's actual run result must be checked in GitHub Actions; its presence alone is not a passed test.
+
