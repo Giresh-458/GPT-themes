@@ -1,4 +1,4 @@
-import { THEMES, DEFAULT_SETTINGS, getTheme, sanitizeSettings } from "../src/themes.js";
+import { THEMES, DEFAULT_SETTINGS, WALLPAPERS, getTheme, sanitizeSettings } from "../src/themes.js";
 import { loadSettings, saveSettings, resetSettings, saveWallpaper, getWallpaperDataUrl, deleteWallpaper } from "../src/storage.js";
 
 const $ = id => document.getElementById(id);
@@ -55,9 +55,7 @@ function syncControls() {
   $("transparencyValue").value = draft.customizations.transparency + "%";
   $("blurValue").value = draft.customizations.blur + " px";
   $("overlayValue").value = Math.round(draft.customizations.overlay * 100) + "%";
-  $("wallpaperStatus").textContent = draft.wallpaper.kind === "custom"
-    ? "Custom wallpaper stored locally."
-    : "Built-in atmosphere selected.";
+  $("wallpaperStatus").textContent = draft.wallpaper.kind === "custom" ? "Custom wallpaper stored locally." : "Built-in atmosphere selected.";
   renderThemes();
   renderPresets();
   $("applyChanges").disabled = !isDirty();
@@ -71,22 +69,23 @@ async function sendToActiveTab(message) {
 }
 async function applyVisual(settings) {
   const theme = getTheme(settings);
-  await sendToActiveTab({
-    type: "CHATGPT_THEME_STUDIO_APPLY",
-    settings: { theme, customizations: settings.customizations }
-  });
-  const url = await getWallpaperDataUrl(settings.wallpaper);
-  if (url) await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_WALLPAPER", dataUrl: url });
-  else await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_CLEAR_WALLPAPER" });
+  await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_APPLY", settings: { theme, customizations: settings.customizations } });
+  if (settings.wallpaper?.kind === "custom") {
+    const url = await getWallpaperDataUrl(settings.wallpaper);
+    if (url) await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_WALLPAPER", dataUrl: url });
+    else {
+      await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_BUILTIN_WALLPAPER", svg: WALLPAPERS[theme.wallpaper] || WALLPAPERS.twilight });
+      $("wallpaperStatus").textContent = "Custom wallpaper is unavailable on this device; using built-in wallpaper.";
+    }
+  } else {
+    const svg = WALLPAPERS[settings.wallpaper?.id] || WALLPAPERS[theme.wallpaper] || WALLPAPERS.twilight;
+    await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_BUILTIN_WALLPAPER", svg });
+  }
 }
 async function previewDraft() {
   setStatus("Preview only");
-  try {
-    await applyVisual(draft);
-    syncControls();
-  } catch (error) {
-    tell("Preview failed: " + error.message, true);
-  }
+  try { await applyVisual(draft); syncControls(); }
+  catch (error) { tell("Preview failed: " + error.message, true); }
 }
 async function commitDraft() {
   try {
@@ -110,7 +109,7 @@ async function cancelDraft() {
   clearTimeout(previewTimer);
   draft = structuredClone(committed);
   if (newlyUploadedWallpaper) {
-    try { await deleteWallpaper(newlyUploadedWallpaper); } catch { /* keep saved settings intact */ }
+    try { await deleteWallpaper(newlyUploadedWallpaper); } catch { /* saved settings remain authoritative */ }
   }
   newlyUploadedWallpaper = null;
   syncControls();
@@ -118,7 +117,6 @@ async function cancelDraft() {
   setStatus("Restored");
   tell("Preview cancelled; saved settings restored.");
 }
-
 function renderPresets() {
   const list = $("presetList");
   list.replaceChildren();
@@ -135,40 +133,33 @@ function renderPresets() {
     const name = document.createElement("span");
     name.textContent = preset.name;
     const use = document.createElement("button");
-    use.type = "button";
-    use.textContent = "Preview";
+    use.type = "button"; use.textContent = "Preview";
     use.addEventListener("click", async () => {
       draft.activeThemeId = preset.settings.activeThemeId;
       draft.customizations = structuredClone(preset.settings.customizations);
       draft.wallpaper = structuredClone(preset.settings.wallpaper);
-      syncControls();
-      await previewDraft();
+      syncControls(); await previewDraft();
     });
     const rename = document.createElement("button");
-    rename.type = "button";
-    rename.textContent = "Rename";
+    rename.type = "button"; rename.textContent = "Rename";
     rename.addEventListener("click", async () => {
       const next = window.prompt("Rename preset", preset.name);
       if (next === null) return;
       if (!next.trim()) return tell("Preset name cannot be empty.", true);
       preset.name = next.trim().slice(0, 60);
-      syncControls();
-      await commitDraft();
+      syncControls(); await commitDraft();
     });
     const remove = document.createElement("button");
-    remove.type = "button";
-    remove.textContent = "Delete";
+    remove.type = "button"; remove.textContent = "Delete";
     remove.addEventListener("click", async () => {
       if (!window.confirm(`Delete “${preset.name}”? This does not affect your current theme.`)) return;
       draft.customPresets = draft.customPresets.filter(p => p.id !== preset.id);
-      syncControls();
-      await commitDraft();
+      syncControls(); await commitDraft();
     });
     item.append(name, use, rename, remove);
     list.append(item);
   }
 }
-
 for (const [id, key, divisor] of [
   ["transparency", "transparency", 1],
   ["blur", "blur", 1],
@@ -187,24 +178,21 @@ for (const [id, key, divisor] of [
     previewTimer = setTimeout(() => previewDraft(), 120);
   });
 }
-
 $("wallpaperFile").addEventListener("change", async event => {
   const file = event.target.files?.[0];
   if (!file) return;
   try {
     const wallpaper = await saveWallpaper(file);
     if (newlyUploadedWallpaper) {
-      try { await deleteWallpaper(newlyUploadedWallpaper); } catch { /* temporary asset cleanup is best effort */ }
+      try { await deleteWallpaper(newlyUploadedWallpaper); } catch { /* best-effort temporary cleanup */ }
     }
     newlyUploadedWallpaper = wallpaper;
     draft.wallpaper = wallpaper;
     await previewDraft();
     tell("Wallpaper selected for preview. Apply to save.");
-  } catch (error) {
-    tell(error.message, true);
-  } finally { event.target.value = ""; }
+  } catch (error) { tell(error.message, true); }
+  finally { event.target.value = ""; }
 });
-
 $("savePreset").addEventListener("click", async () => {
   const name = $("presetName").value.trim();
   if (!name) return tell("Enter a name for this preset.", true);
@@ -219,19 +207,15 @@ $("savePreset").addEventListener("click", async () => {
     }
   });
   $("presetName").value = "";
-  syncControls();
-  await commitDraft();
+  syncControls(); await commitDraft();
 });
-
 $("applyChanges").addEventListener("click", commitDraft);
 $("cancelChanges").addEventListener("click", cancelDraft);
 $("resetButton").addEventListener("click", async () => {
   if (!window.confirm("Reset current settings to Twilight Glass? Saved presets will remain.")) return;
   clearTimeout(previewTimer);
   draft = structuredClone(DEFAULT_SETTINGS);
-  syncControls();
-  await previewDraft();
-  await commitDraft();
+  syncControls(); await previewDraft(); await commitDraft();
   await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_RESET" });
   await applyVisual(committed);
   setStatus("Reset");
@@ -239,15 +223,11 @@ $("resetButton").addEventListener("click", async () => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if ((area === "sync" || area === "local") && changes.themeStudioSettings) {
     loadSettings().then(settings => {
-      committed = settings;
-      draft = structuredClone(settings);
-      newlyUploadedWallpaper = null;
-      syncControls();
-      applyVisual(committed);
+      committed = settings; draft = structuredClone(settings); newlyUploadedWallpaper = null;
+      syncControls(); applyVisual(committed);
     });
   }
 });
-
 draft = sanitizeSettings(draft);
 syncControls();
 await applyVisual(committed);
