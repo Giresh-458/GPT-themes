@@ -13,6 +13,20 @@
     return typeof value === "string" && value.length < 100 ? value : fallback;
   }
   function root() { return document.documentElement; }
+  function withOpacity(color, multiplier) {
+    if (typeof color !== "string") return color;
+    const rgb = color.match(/^rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)$/i);
+    if (rgb) {
+      const alpha = (rgb[4] === undefined ? 1 : Number(rgb[4])) * multiplier;
+      return "rgba(" + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ", " + Math.max(0, Math.min(1, alpha)) + ")";
+    }
+    const hex = color.match(/^#([0-9a-f]{6})$/i);
+    if (hex) {
+      const value = hex[1];
+      return "rgba(" + parseInt(value.slice(0,2),16) + ", " + parseInt(value.slice(2,4),16) + ", " + parseInt(value.slice(4,6),16) + ", " + Math.max(0, Math.min(1, multiplier)) + ")";
+    }
+    return color;
+  }
 
   function apply(settings) {
     if (!settings || typeof settings !== "object") return;
@@ -22,14 +36,19 @@
     root().setAttribute(ROOT_ATTRIBUTE, "true");
     root().style.setProperty("--gpts-text", cssColor(colors.text, "#f7f5ff"));
     root().style.setProperty("--gpts-muted", cssColor(colors.muted, "#d5d4ea"));
-    root().style.setProperty("--gpts-surface", cssColor(colors.surface, "rgba(30, 42, 86, 0.79)"));
-    root().style.setProperty("--gpts-surface-strong", cssColor(colors.surfaceStrong, "rgba(25, 34, 69, 0.91)"));
+    const surface = cssColor(colors.surface, "rgba(30, 42, 86, 0.79)");
+    const surfaceStrong = cssColor(colors.surfaceStrong, "rgba(25, 34, 69, 0.91)");
+    const transparency = clamp(custom.transparency, 45, 96, 79) / 100;
+    root().style.setProperty("--gpts-surface", surface);
+    root().style.setProperty("--gpts-surface-strong", surfaceStrong);
+    root().style.setProperty("--gpts-surface-effective", withOpacity(surface, transparency));
+    root().style.setProperty("--gpts-surface-strong-effective", withOpacity(surfaceStrong, transparency));
     root().style.setProperty("--gpts-border", cssColor(colors.border, "rgba(226, 228, 255, 0.27)"));
     root().style.setProperty("--gpts-accent", cssColor(colors.accent, "#b6c7ff"));
     root().style.setProperty("--gpts-shadow", cssColor(colors.shadow, "rgba(5, 9, 34, 0.34)"));
     root().style.setProperty("--gpts-blur", clamp(custom.blur, 0, 30, 18) + "px");
     root().style.setProperty("--gpts-overlay", String(clamp(custom.overlay, 0, 0.7, 0.26)));
-    root().style.setProperty("--gpts-transparency", String(clamp(custom.transparency, 45, 96, 79)));
+    root().style.setProperty("--gpts-transparency", String(Math.round(transparency * 100)));
     root().style.setProperty("--gpts-border-strength", String(clamp(custom.borderStrength, 0, 2, 1)));
     root().style.setProperty("--gpts-shadow-strength", String(clamp(custom.shadowStrength, 0, 2, 1)));
     startWrapperObserver();
@@ -47,6 +66,7 @@
     root().removeAttribute(ROOT_ATTRIBUTE);
     for (const name of [
       "--gpts-text", "--gpts-muted", "--gpts-surface", "--gpts-surface-strong",
+      "--gpts-surface-effective", "--gpts-surface-strong-effective",
       "--gpts-border", "--gpts-accent", "--gpts-shadow", "--gpts-blur",
       "--gpts-overlay", "--gpts-transparency", "--gpts-border-strength",
       "--gpts-shadow-strength", "--gpts-wallpaper"
