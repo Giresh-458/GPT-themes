@@ -1,34 +1,32 @@
 # ChatGPT Theme Studio
 
-A privacy-conscious Manifest V3 Chrome extension for a glassmorphism theme layer on ChatGPT.
+A Manifest V3 Chrome extension that adds customizable wallpaper and glass-style surfaces to ChatGPT.
 
-## Project status
+## Current status
 
-The extension now applies a full-page wallpaper and glass surface layer using observed ChatGPT DOM patterns plus a guarded fallback for large opaque layout wrappers. ChatGPT's DOM changes over time, so the landing page, conversation view, special composer modes, and responsive layouts still require browser regression testing.
+Saved settings are applied when the popup opens and are also restored by the extension service worker after a matching ChatGPT tab finishes loading or settings change. The live appearance still depends on ChatGPT's changing DOM and must be checked in Chrome against the target reference image.
 
-## Design principles
+## Features
 
-- Preserve normal ChatGPT behavior and composer semantics.
-- Do not claim browser/DOM verification unless it has actually been performed.
-- Use local storage for local preferences and uploaded wallpaper data; synchronize only small settings where supported.
-- Avoid remote executable code and analytics. The default Twilight photo is hotlinked from Unsplash; other built-in wallpapers are bundled SVGs, and custom uploads remain local.
-- Keep all extension effects clearly scoped and reversible.
-- Prefer readable surfaces and sufficient contrast over decorative transparency.
+- Five built-in themes: Twilight, Aurora, Rose Quartz, Midnight, and Arctic.
+- Wallpaper selection, local custom image uploads, blur/transparency/overlay controls, and saved presets.
+- Preview, apply, cancel, and reset controls.
+- Theme settings stored through Chrome storage; custom wallpaper data is kept locally.
+- No analytics or remote executable code.
 
-## Planned initial themes
+## Privacy and network behavior
 
-1. Twilight Glass
-2. Aurora Glass
-3. Rose Quartz Glass
-4. Midnight Glass
-5. Arctic Glass
+The default Twilight photo is requested from Unsplash at `images.unsplash.com`. That image request requires an internet connection. Other built-in wallpapers are bundled SVGs, and uploaded wallpapers are stored locally. ChatGPT conversations are not read or sent anywhere by this extension; the content script only styles the page.
 
 ## Development
 
-No build toolchain is required for the initial vanilla JavaScript implementation. Load the extension using Chrome's **Load unpacked** flow by selecting the directory containing `manifest.json`.
+No build step is required. In Chrome, open `chrome://extensions`, enable Developer mode, and choose **Load unpacked** for the directory containing `manifest.json`.
 
-The default Twilight wallpaper loads a static image from Unsplash, so the first use of that theme requires an internet connection and sends an ordinary image request to images.unsplash.com. Other bundled wallpapers and uploaded custom wallpapers do not use that remote image. Real-browser verification requires Chrome with an authenticated ChatGPT session. Automated static checks are not a substitute for testing the live composer, navigation, menus, and special modes.
+Run checks with:
 
-## Verification status
+```sh
+npm test
+npm run check
+```
 
-The initial commit establishes the repository baseline. Do not interpret this README or a successful package operation as evidence that the extension has passed live-browser verification.
+These static checks do not replace live browser tests. Before declaring the visual match complete, verify wallpaper visibility, legibility, navigation, message content, composer typing and sending, special composer modes, reset, and narrow/wide layouts in Chrome. Do not treat the presence of a CI workflow as evidence of a passing run; check the actual run result.
