@@ -57,6 +57,14 @@
   function setDataUrl(dataUrl) {
     root().style.setProperty("--gpts-wallpaper", 'url("' + dataUrl + '")');
   }
+  function setRemoteWallpaper(url) {
+    let parsed;
+    try { parsed = new URL(url); } catch { return false; }
+    // Allow only the specific static Unsplash image used by the built-in Twilight theme.
+    if (parsed.origin !== "https://images.unsplash.com" || parsed.pathname !== "/photo-1776348568867-24146d18b736") return false;
+    root().style.setProperty("--gpts-wallpaper", 'url("' + parsed.href.replace(/["\\\\]/g, "") + '")');
+    return true;
+  }
 
   function reset() {
     if (observer) observer.disconnect();
@@ -144,6 +152,10 @@
     } else if (message?.type === "CHATGPT_THEME_STUDIO_CLEAR_WALLPAPER") {
       root().style.removeProperty("--gpts-wallpaper");
       sendResponse({ ok: true });
+    } else if (message?.type === "CHATGPT_THEME_STUDIO_SET_REMOTE_WALLPAPER") {
+      const ok = typeof message.url === "string" && setRemoteWallpaper(message.url);
+      sendResponse({ ok, ...(ok ? {} : { error: "Remote wallpaper URL is not allowed." }) });
+      if (ok) queueWrapperScan();
     } else if (message?.type === "CHATGPT_THEME_STUDIO_SET_BUILTIN_WALLPAPER") {
       const svg = message.svg;
       if (typeof svg === "string" && svg.length < 90000 && svg.startsWith("<svg ")) {
