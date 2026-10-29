@@ -16,7 +16,6 @@ html[data-chatgpt-theme-studio="true"] body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: var(--gpts-wallpaper, none);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
