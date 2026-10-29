@@ -8,7 +8,6 @@
     const n = Number(value);
     return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
   }
-
   function cssColor(value, fallback) {
     return typeof value === "string" && value.length < 100 ? value : fallback;
   }
@@ -18,7 +17,6 @@
     const theme = settings.theme || {};
     const custom = settings.customizations || {};
     const colors = theme.colors || {};
-
     document.documentElement.setAttribute(ROOT_ATTRIBUTE, "true");
     document.documentElement.style.setProperty("--gpts-text", cssColor(colors.text, "#f7f5ff"));
     document.documentElement.style.setProperty("--gpts-muted", cssColor(colors.muted, "#d5d4ea"));
@@ -32,6 +30,7 @@
     document.documentElement.style.setProperty("--gpts-transparency", String(clamp(custom.transparency, 45, 96, 79)));
     document.documentElement.style.setProperty("--gpts-border-strength", String(clamp(custom.borderStrength, 0, 2, 1)));
     document.documentElement.style.setProperty("--gpts-shadow-strength", String(clamp(custom.shadowStrength, 0, 2, 1)));
+    document.documentElement.style.setProperty("--gpts-wallpaper", "none");
   }
 
   function reset() {
@@ -42,9 +41,7 @@
       "--gpts-shadow", "--gpts-blur", "--gpts-overlay",
       "--gpts-transparency", "--gpts-border-strength", "--gpts-shadow-strength",
       "--gpts-wallpaper"
-    ]) {
-      document.documentElement.style.removeProperty(name);
-    }
+    ]) document.documentElement.style.removeProperty(name);
   }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -56,7 +53,7 @@
       sendResponse({ ok: true });
     } else if (message?.type === WALLPAPER_MESSAGE) {
       const url = message.dataUrl;
-      if (typeof url === "string" && /^data:image\/(png|jpeg|webp);base64,/.test(url)) {
+      if (typeof url === "string" && /^data:image\/(png|jpeg|webp|svg\+xml);base64,/.test(url)) {
         document.documentElement.style.setProperty("--gpts-wallpaper", 'url("' + url + '")');
         sendResponse({ ok: true });
       } else {
@@ -65,6 +62,16 @@
     } else if (message?.type === "CHATGPT_THEME_STUDIO_CLEAR_WALLPAPER") {
       document.documentElement.style.removeProperty("--gpts-wallpaper");
       sendResponse({ ok: true });
+    } else if (message?.type === "CHATGPT_THEME_STUDIO_SET_BUILTIN_WALLPAPER") {
+      const svg = message.svg;
+      // SVG comes from the extension's bundled static theme definitions, not the page.
+      if (typeof svg === "string" && svg.length < 100_000 && svg.startsWith("<svg ")) {
+        const dataUrl = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+        document.documentElement.style.setProperty("--gpts-wallpaper", 'url("' + dataUrl + '")');
+        sendResponse({ ok: true });
+      } else {
+        sendResponse({ ok: false, error: "Invalid built-in wallpaper." });
+      }
     }
     return true;
   });
