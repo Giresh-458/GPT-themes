@@ -15,7 +15,7 @@
   function root() { return document.documentElement; }
   function withOpacity(color, multiplier) {
     if (typeof color !== "string") return color;
-    const rgb = color.match(/^rgba?\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)$/i);
+    const rgb = color.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/i);
     if (rgb) {
       const alpha = (rgb[4] === undefined ? 1 : Number(rgb[4])) * multiplier;
       return "rgba(" + rgb[1] + ", " + rgb[2] + ", " + rgb[3] + ", " + Math.max(0, Math.min(1, alpha)) + ")";
@@ -27,7 +27,6 @@
     }
     return color;
   }
-
   function apply(settings) {
     if (!settings || typeof settings !== "object") return;
     const theme = settings.theme || {};
