@@ -12,14 +12,18 @@ Audit date: 2026-10-29
 | Test | Result | Evidence / limitation |
 |---|---|---|
 | Repository/file-tree inspection | Passed (remote inspection) | GitHub tree confirms files are present. |
+| Live ChatGPT DOM discovery | Passed for one current page | User ran read-only DevTools inspections on 2026-10-29; see evidence section below. |
+| Selector match counts | Passed for inspected page | Seven targets each had one visible match at collection time. This is a single-page observation, not a cross-layout guarantee. |
+| Shadow DOM reachability | Passed for inspected targets | All seven selected targets reported `Document` as their root. |
+| CSS background/pseudo-element inspection | Passed for inspected targets | Background and pseudo-element styles were collected; no visible `::before`/ `::after` backgrounds were reported on the inspected targets. |
 | Node unit tests | Not run | Container cannot resolve github.com to clone; connector cannot execute Node. |
 | JavaScript syntax | Not run | Run `npm run check` locally. |
 | Manifest JSON and Chrome load | Not verified | Manifest reviewed as text but not loaded in Chrome. |
-| Authenticated ChatGPT DOM inspection | Blocked | No authenticated browser/DevTools session connected. |
-| Composer text entry/send/special modes | Blocked | Requires real ChatGPT page. |
-| Built-in SVG wallpaper rendering | Not verified | Artwork is bundled inline in theme data but not rendered in browser here. |
-| Screenshot/reference comparison | Blocked | No actual browser screenshots captured. |
-| Console attribution and contrast measurements | Blocked | Requires before/after browser evidence. |
+| Extension rendering after CSS update | Not verified | The user inspected the site DOM, but the updated extension stylesheet has not been loaded/tested in Chrome. |
+| Composer text entry/send/special modes | Not verified | Requires regression testing with the extension enabled. |
+| Built-in SVG wallpaper rendering/stacking | Not verified | Wallpaper layer and new translucent surface rules have not been tested in the browser. |
+| Screenshot/reference comparison | Not verified | No before/after screenshots captured. |
+| Console attribution and contrast measurements | Not verified | Requires before/after browser evidence. |
 | Installable/source ZIP, integrity and checksums | Not produced | No verified artifact files exist yet. |
 
 ## Implemented
@@ -27,15 +31,51 @@ Audit date: 2026-10-29
 - Five themes with original inline SVG mountain/landscape artwork bundled in `src/themes.js`.
 - Settings sanitization and bounds, local custom wallpaper storage, theme gallery, sliders, custom presets, preview/apply/cancel, and reset.
 - Content script with extension-owned CSS variables and background wallpaper layer.
+- Evidence-backed CSS targeting for the inspected sidebar, navigation, main surface, composer root, and editable text area.
 - Test scaffold and targeted DevTools collection instructions.
 
-## Known limitations
-1. **The visible page is not yet a full glassmorphism theme.** We have not applied rules to the actual sidebar, message surfaces, composer, menus, or structured content because their live DOM selectors are unverified.
-2. SVG wallpaper rendering and pseudo-element stacking are unverified in Chrome. The site's own painted backgrounds may obscure the wallpaper.
-3. Preview/apply/cancel has not been browser-tested. Popup close/reopen while a preview is active has no explicit close lifecycle restore, so that behavior is not guaranteed yet.
-4. Custom wallpaper validation checks MIME type, size, and data URL format but not decoded pixel dimensions. Temporary custom assets are cleaned up best-effort.
-5. Sync quota, local fallback, cross-device behavior, and missing custom wallpaper fallback need browser tests.
-6. Node tests/syntax checks could not run because direct GitHub cloning failed due to DNS/network resolution.
-7. No real screenshots, console comparison report, installable ZIP, source ZIP, or SHA-256 checksums are available.
+## Live DOM evidence collected from the user's current ChatGPT page
+
+Collection date: 2026-10-29. These are observations from one page/session only; ChatGPT may change its DOM and CSS at any time.
+
+| Target | Observed selector / structure | Observed result |
+|---|---|---|
+| Sidebar | `aside.app-shell-left-panel` | One visible match; 240 × 859 px in the inspected viewport; black background; inline width/margin/padding styles exist. |
+| Navigation | `nav[role="navigation"]` | One visible match; transparent background. |
+| Main surface | `main`, class included `MainContentSurface-*` | One visible match; 545 × 859 px; black background in inspected page. |
+| Composer body | class prefix `ComposerLayoutBody-*` | One visible match; 504 × 52 px; transparent background. |
+| Composer footer | class prefix `ComposerLayoutFooter-*` | One visible match; 504 × 44 px; transparent background. |
+| Composer root | class prefix `ComposerLayoutRoot-*` | Parent of composer body; observed background `rgb(27, 27, 27)`. |
+| Editable text area | `div[role="textbox"].ProseMirror[contenteditable="true"]` | One visible match; 265 × 36 px; transparent background; overflow hidden. |
+| Shadow root | `getRootNode()` for all seven checked targets | All reported `Document`; no shadow host. |
+| Pseudo-elements | `::before` and `::after` on inspected surfaces | Reported `content: none` and `backgroundImage: none`. |
+
+The match-count check returned exactly one visible match for each of:
+- `aside.app-shell-left-panel`
+- `nav[role="navigation"]`
+- `main`
+- `div[role="textbox"].ProseMirror[contenteditable="true"]`
+- `[class*="ComposerLayoutBody-"]`
+- `[class*="ComposerLayoutFooter-"]`
+- `[class*="MainContentSurface"]`
+
+## Known limitations and safety notes
+1. **CSS changes are evidence-backed but not yet browser-validated.** The selectors matched once in one inspected page; class prefixes and layout can change across ChatGPT releases, routes, and responsive states.
+2. The new CSS styles the sidebar, main surface, composer root, and editor surface only. Message bubbles, menus, buttons, code blocks, tables, and other structured content have not been inspected or themed.
+3. SVG wallpaper visibility and pseudo-element stacking are still unverified in Chrome. The site's own painted backgrounds or stacking contexts may obscure the wallpaper.
+4. The new main surface rule uses a translucent theme surface; verify text contrast and wallpaper visibility in each theme, especially Arctic Glass.
+5. Preview/apply/cancel has not been browser-tested. Popup close/reopen while a preview is active has no explicit close lifecycle restore, so that behavior is not guaranteed yet.
+6. Custom wallpaper validation checks MIME type, size, and data URL format but not decoded pixel dimensions. Temporary custom assets are cleaned up best-effort.
+7. Sync quota, local fallback, cross-device behavior, and missing custom wallpaper fallback need browser tests.
+8. Node tests/syntax checks could not run because direct GitHub cloning failed due to DNS/network resolution.
+9. No real screenshots, console comparison report, installable ZIP, source ZIP, or SHA-256 checksums are available.
+
+## Next verification steps
+1. Load the extension unpacked in Chrome from the branch checkout.
+2. Apply each theme and test wallpaper visibility, legibility, and composer behavior.
+3. Navigate between conversations and reload ChatGPT; verify the styles are re-applied and reset works.
+4. Test narrow and wide viewports, light/dark appearance, buttons, message bubbles, code blocks, tables, and menus.
+5. Run the repository's syntax/unit checks and record actual results.
+6. Capture before/after screenshots and inspect console errors before marking the PR ready.
 
 Do not report any unverified requirement as complete.
