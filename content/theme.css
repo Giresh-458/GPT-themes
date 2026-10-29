@@ -1,30 +1,25 @@
 /*
- * ChatGPT Theme Studio — evidence-backed, conservative surface styling.
- * DOM evidence was collected from one page/session on 2026-10-29.
- * ChatGPT's DOM varies by route/auth state and may change without notice.
- * Preserve app-owned layout geometry and editor interaction behavior.
+ * ChatGPT Theme Studio — evidence-backed wallpaper and glass surfaces.
+ * Live selectors vary by ChatGPT route/authentication state; keep selectors
+ * narrow and do not alter app-owned geometry or editor interaction behavior.
  */
 :root[data-chatgpt-theme-studio="true"] {
   --gpts-wallpaper-overlay: var(--gpts-overlay, 0.26);
   color: var(--gpts-text, #f7f5ff);
 }
 
-/* Fallback decorative layer. Actual wallpaper is also composed onto main below
-   because root pseudo-elements can be hidden behind app/body stacking layers. */
+/* Decorative fallback layer; main also receives the wallpaper directly below. */
 :root[data-chatgpt-theme-studio="true"]::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: var(--gpts-wallpaper, none);
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: cover;
+  background: var(--gpts-wallpaper, none) center / cover no-repeat;
   opacity: calc(1 - var(--gpts-wallpaper-overlay));
 }
 
-/* Sidebar target observed on one page; no geometry/layout properties changed. */
+/* Sidebar: only color/decoration changes, never width, padding, or scrolling. */
 html[data-chatgpt-theme-studio="true"] aside.app-shell-left-panel {
   background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.93)) !important;
   color: var(--gpts-text, #f7f5ff);
@@ -34,15 +29,13 @@ html[data-chatgpt-theme-studio="true"] aside.app-shell-left-panel {
 }
 
 html[data-chatgpt-theme-studio="true"] nav[role="navigation"] {
-  background-color: transparent;
+  background-color: transparent !important;
   color: inherit;
 }
 
 /*
- * Paint the wallpaper as a background layer on main itself, not only behind
- * the site's stacking contexts. The first background layer is the theme's
- * translucent surface; the second is the selected wallpaper. This does not
- * create an overlay element or intercept pointer events.
+ * Wallpaper on main makes it visible even when root pseudo-elements are
+ * behind app stacking contexts. A translucent gradient sits over the image.
  */
 html[data-chatgpt-theme-studio="true"] main {
   background-color: var(--gpts-surface, rgba(30, 42, 86, 0.79)) !important;
@@ -57,7 +50,17 @@ html[data-chatgpt-theme-studio="true"] main {
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(125%);
 }
 
-/* Composer class prefixes are dynamic; apply only when present. */
+/*
+ * Earlier live inspection found these wrappers transparent in one route.
+ * Force transparency only on the known layout wrappers, so they don't paint
+ * an opaque slab over main's wallpaper. No dimensions/position/z-index changes.
+ */
+html[data-chatgpt-theme-studio="true"] main [class*="MainContentClip"],
+html[data-chatgpt-theme-studio="true"] main [class*="Workspace-"] {
+  background-color: transparent !important;
+}
+
+/* Composer root is optional across routes; keep its layout and stacking intact. */
 html[data-chatgpt-theme-studio="true"] [class*="ComposerLayoutRoot-"] {
   background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.93)) !important;
   color: var(--gpts-text, #f7f5ff);
@@ -68,7 +71,7 @@ html[data-chatgpt-theme-studio="true"] [class*="ComposerLayoutRoot-"] {
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
 
-/* Do not style the editor's size, position, overflow, or interaction behavior. */
+/* Preserve editor dimensions, positioning, overflow, and interaction behavior. */
 html[data-chatgpt-theme-studio="true"] div[role="textbox"].ProseMirror[contenteditable="true"] {
   background-color: transparent !important;
 }
