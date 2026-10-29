@@ -20,7 +20,14 @@ html[data-chatgpt-theme-studio="true"] body::before {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  opacity: calc(1 - var(--gpts-overlay, 0.26));
+  /* The overlay setting controls a dark contrast wash, not wallpaper opacity. */
+  background-image:
+    linear-gradient(
+      rgba(7, 12, 30, var(--gpts-overlay, 0.26)),
+      rgba(7, 12, 30, var(--gpts-overlay, 0.26))
+    ),
+    var(--gpts-wallpaper, none);
+  opacity: 1;
 }
 
 /* The app's outer layout must not paint a solid page over the wallpaper. */
