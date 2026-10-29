@@ -5,7 +5,7 @@
   color: #f5f6ff;
 }
 * { box-sizing: border-box; }
-body { margin: 0; width: 370px; min-height: 600px; background: radial-gradient(ellipse at 8% 0%, #394b83 0, transparent 44%), radial-gradient(ellipse at 92% 28%, #663b79 0, transparent 36%), #10162d; }
+body { margin: 0; width: 370px; min-height: 580px; max-height: 600px; overflow-y: auto; background: radial-gradient(ellipse at 8% 0%, #394b83 0, transparent 44%), radial-gradient(ellipse at 92% 28%, #663b79 0, transparent 36%), #10162d; }
 button, input { font: inherit; }
 button, .upload-button { cursor: pointer; }
 button:disabled { opacity: .4; cursor: not-allowed; }
