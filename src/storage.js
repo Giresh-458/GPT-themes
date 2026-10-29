@@ -12,7 +12,6 @@ function storageGet(area, key) {
     });
   });
 }
-
 function storageSet(area, values) {
   return new Promise((resolve, reject) => {
     chrome.storage[area].set(values, () => {
@@ -22,7 +21,6 @@ function storageSet(area, values) {
     });
   });
 }
-
 function storageRemove(area, key) {
   return new Promise((resolve, reject) => {
     chrome.storage[area].remove(key, () => {
@@ -32,13 +30,12 @@ function storageRemove(area, key) {
     });
   });
 }
-
 export async function loadSettings() {
   try {
     const result = await storageGet("sync", SETTINGS_KEY);
     if (result?.[SETTINGS_KEY]) return sanitizeSettings(result[SETTINGS_KEY]);
   } catch {
-    // Sync storage can be unavailable or exceed quotas; check local fallback next.
+    // Sync may be unavailable; read the local fallback below.
   }
   try {
     const result = await storageGet("local", SETTINGS_KEY);
@@ -47,43 +44,34 @@ export async function loadSettings() {
     return structuredClone(DEFAULT_SETTINGS);
   }
 }
-
 export async function saveSettings(settings) {
   const safe = sanitizeSettings(settings);
   try {
     await storageSet("sync", { [SETTINGS_KEY]: safe });
+    try { await storageRemove("local", SETTINGS_KEY); } catch { /* synced value remains authoritative */ }
   } catch {
-    // Keep settings usable even when sync storage is unavailable.
+    // Avoid an older synced value masking this newer local fallback on subsequent loads.
+    try { await storageRemove("sync", SETTINGS_KEY); } catch { /* removal may also be unavailable */ }
     await storageSet("local", { [SETTINGS_KEY]: safe });
   }
   return safe;
 }
-
 export async function resetSettings() {
   const settings = structuredClone(DEFAULT_SETTINGS);
-  let syncSucceeded = false;
   try {
     await storageSet("sync", { [SETTINGS_KEY]: settings });
-    syncSucceeded = true;
+    try { await storageRemove("local", SETTINGS_KEY); } catch { /* synced defaults remain authoritative */ }
   } catch {
+    try { await storageRemove("sync", SETTINGS_KEY); } catch { /* local defaults remain the fallback */ }
     await storageSet("local", { [SETTINGS_KEY]: settings });
-  }
-  if (syncSucceeded) {
-    try { await storageRemove("local", SETTINGS_KEY); } catch { /* no local fallback to clean up */ }
   }
   return settings;
 }
-
 export async function saveWallpaper(file) {
   const maxBytes = 5 * 1024 * 1024;
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!file || !allowedTypes.includes(file.type)) {
-    throw new Error("Choose a JPEG, PNG, or WebP image.");
-  }
-  if (file.size <= 0 || file.size > maxBytes) {
-    throw new Error("Wallpaper must be smaller than 5 MB.");
-  }
-
+  if (!file || !allowedTypes.includes(file.type)) throw new Error("Choose a JPEG, PNG, or WebP image.");
+  if (file.size <= 0 || file.size > maxBytes) throw new Error("Wallpaper must be smaller than 5 MB.");
   const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error("Could not read this image."));
@@ -94,12 +82,10 @@ export async function saveWallpaper(file) {
     };
     reader.readAsDataURL(file);
   });
-
   const id = crypto.randomUUID();
   await storageSet("local", { [WALLPAPER_PREFIX + id]: dataUrl });
   return { kind: "custom", id };
 }
-
 export async function getWallpaperDataUrl(wallpaper) {
   if (!wallpaper || wallpaper.kind !== "custom") return null;
   try {
@@ -110,7 +96,6 @@ export async function getWallpaperDataUrl(wallpaper) {
     return null;
   }
 }
-
 export async function deleteWallpaper(wallpaper) {
   if (!wallpaper || wallpaper.kind !== "custom") return;
   await storageRemove("local", WALLPAPER_PREFIX + wallpaper.id);
