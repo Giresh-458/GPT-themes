@@ -1,14 +1,16 @@
 /*
- * ChatGPT Theme Studio — observed DOM targets.
- * Evidence was collected from one authenticated ChatGPT page on 2026-10-29.
- * Dynamic class-name prefixes are fallbacks, not stable API guarantees.
- * Keep layout geometry and editor interaction styles owned by ChatGPT.
+ * ChatGPT Theme Studio — evidence-backed, conservative surface styling.
+ * DOM evidence was collected from one page/session on 2026-10-29.
+ * ChatGPT's DOM varies by route/auth state and may change without notice.
+ * Preserve app-owned layout geometry and editor interaction behavior.
  */
 :root[data-chatgpt-theme-studio="true"] {
   --gpts-wallpaper-overlay: var(--gpts-overlay, 0.26);
   color: var(--gpts-text, #f7f5ff);
 }
 
+/* Fallback decorative layer. Actual wallpaper is also composed onto main below
+   because root pseudo-elements can be hidden behind app/body stacking layers. */
 :root[data-chatgpt-theme-studio="true"]::before {
   content: "";
   position: fixed;
@@ -22,10 +24,7 @@
   opacity: calc(1 - var(--gpts-wallpaper-overlay));
 }
 
-/*
- * Sidebar selector observed as a single visible match. Do not override width,
- * margin, padding, display, position, or overflow: those are app layout.
- */
+/* Sidebar target observed on one page; no geometry/layout properties changed. */
 html[data-chatgpt-theme-studio="true"] aside.app-shell-left-panel {
   background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.93)) !important;
   color: var(--gpts-text, #f7f5ff);
@@ -34,30 +33,31 @@ html[data-chatgpt-theme-studio="true"] aside.app-shell-left-panel {
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
 
-/* Navigation is transparent in the inspected page; preserve its layout. */
 html[data-chatgpt-theme-studio="true"] nav[role="navigation"] {
   background-color: transparent;
   color: inherit;
 }
 
 /*
- * Main surface was observed as <main> with a MainContentSurface-* class.
- * The generic main fallback supports layout variants; translucent theme
- * surfaces let the dedicated wallpaper layer show through where stacking
- * permits. Never force message bubbles or arbitrary descendants transparent.
+ * Paint the wallpaper as a background layer on main itself, not only behind
+ * the site's stacking contexts. The first background layer is the theme's
+ * translucent surface; the second is the selected wallpaper. This does not
+ * create an overlay element or intercept pointer events.
  */
 html[data-chatgpt-theme-studio="true"] main {
   background-color: var(--gpts-surface, rgba(30, 42, 86, 0.79)) !important;
+  background-image:
+    linear-gradient(var(--gpts-surface, rgba(30, 42, 86, 0.79)), var(--gpts-surface, rgba(30, 42, 86, 0.79))),
+    var(--gpts-wallpaper, none) !important;
+  background-position: center center, center center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
   color: var(--gpts-text, #f7f5ff);
   -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(125%);
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(125%);
 }
 
-/*
- * Composer root prefix and its 27,27,27 background were observed live.
- * Style the outer container, not the ProseMirror editor; do not change
- * dimensions, overflow, position, z-index, or input behavior.
- */
+/* Composer class prefixes are dynamic; apply only when present. */
 html[data-chatgpt-theme-studio="true"] [class*="ComposerLayoutRoot-"] {
   background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.93)) !important;
   color: var(--gpts-text, #f7f5ff);
@@ -68,16 +68,11 @@ html[data-chatgpt-theme-studio="true"] [class*="ComposerLayoutRoot-"] {
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
 
-/* Keep editor surface transparent so the themed composer root shows through. */
+/* Do not style the editor's size, position, overflow, or interaction behavior. */
 html[data-chatgpt-theme-studio="true"] div[role="textbox"].ProseMirror[contenteditable="true"] {
   background-color: transparent !important;
 }
 
-/*
- * No global transparency reset: ChatGPT may paint opaque backgrounds on
- * other elements. Do not modify button geometry, message layout, scrolling,
- * stacking contexts, or arbitrary nested surfaces without new DOM evidence.
- */
 @media (prefers-reduced-motion: reduce) {
   :root[data-chatgpt-theme-studio="true"] {
     scroll-behavior: auto;
