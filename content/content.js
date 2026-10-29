@@ -2,6 +2,7 @@
   "use strict";
   const ROOT_ATTRIBUTE = "data-chatgpt-theme-studio";
   const WRAPPER_ATTRIBUTE = "data-gpts-wallpaper-wrapper";
+  const SIDEBAR_ATTRIBUTE = "data-gpts-sidebar-root";
   let observer = null;
   let scanQueued = false;
   let resizeListenerAdded = false;
@@ -71,6 +72,7 @@
     if (observer) observer.disconnect();
     observer = null;
     document.querySelectorAll("[" + WRAPPER_ATTRIBUTE + '="true"]').forEach(el => el.removeAttribute(WRAPPER_ATTRIBUTE));
+    document.querySelectorAll("[" + SIDEBAR_ATTRIBUTE + '="true"]').forEach(el => el.removeAttribute(SIDEBAR_ATTRIBUTE));
     root().removeAttribute(ROOT_ATTRIBUTE);
     for (const name of [
       "--gpts-text", "--gpts-muted", "--gpts-surface", "--gpts-surface-strong",
@@ -92,14 +94,15 @@
     scanQueued = false;
     if (!root().hasAttribute(ROOT_ATTRIBUTE)) return;
     const main = document.querySelector("main");
-    if (!main) return;
-    const mainRect = main.getBoundingClientRect();
+    if (!main || !document.body) return;
     const viewportArea = Math.max(window.innerWidth, 1) * Math.max(window.innerHeight, 1);
     const candidates = new Set();
-    main.querySelectorAll("div,section,article,nav,header").forEach(el => {
+    // Inspect page-wide layout wrappers so the wallpaper also shows behind headers
+    // and responsive landing layouts, not just inside main.
+    document.body.querySelectorAll("div,section,article,nav,header").forEach(el => {
       if (el === main || isProtectedElement(el)) return;
       const rect = el.getBoundingClientRect();
-      if (rect.width < Math.max(480, mainRect.width * 0.68) || rect.height < Math.max(110, window.innerHeight * 0.12)) return;
+      if (rect.width < Math.max(480, window.innerWidth * 0.58) || rect.height < Math.max(110, window.innerHeight * 0.12)) return;
       if (rect.width * rect.height > viewportArea * 1.5) return;
       const style = getComputedStyle(el);
       if (style.display === "none" || style.visibility === "hidden") return;
@@ -117,6 +120,26 @@
       if (!candidates.has(el)) el.removeAttribute(WRAPPER_ATTRIBUTE);
     });
     candidates.forEach(el => el.setAttribute(WRAPPER_ATTRIBUTE, "true"));
+
+    // Find the outermost narrow, full-height ancestor containing navigation.
+    // This works when ChatGPT changes the sidebar tag/class between routes.
+    const nav = document.querySelector('nav[role="navigation"]');
+    let sidebar = null;
+    let current = nav;
+    const sidebarMaxWidth = Math.max(420, window.innerWidth * 0.35);
+    while (current && current !== document.body) {
+      const rect = current.getBoundingClientRect();
+      if (rect.width > 0 && rect.width <= sidebarMaxWidth && rect.height >= window.innerHeight * 0.55) {
+        sidebar = current;
+      } else if (rect.width > sidebarMaxWidth && sidebar) {
+        break;
+      }
+      current = current.parentElement;
+    }
+    document.querySelectorAll("[" + SIDEBAR_ATTRIBUTE + '="true"]').forEach(el => {
+      if (el !== sidebar) el.removeAttribute(SIDEBAR_ATTRIBUTE);
+    });
+    if (sidebar) sidebar.setAttribute(SIDEBAR_ATTRIBUTE, "true");
   }
 
   function queueWrapperScan() {
