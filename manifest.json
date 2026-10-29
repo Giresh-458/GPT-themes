@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ChatGPT Theme Studio",
   "version": "0.1.0",
-  "description": "A privacy-first glassmorphism theme studio for ChatGPT.",
+  "description": "A glassmorphism theme studio for ChatGPT with customizable wallpapers.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://chatgpt.com/*",
