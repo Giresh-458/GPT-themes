@@ -40,7 +40,7 @@ html[data-chatgpt-theme-studio="true"] [class*="LeftPanel-"],
 html[data-chatgpt-theme-studio="true"] [class*="ResponsiveLeftPanel-"],
 html[data-chatgpt-theme-studio="true"] [class*="sidebar-navigation"],
 html[data-chatgpt-theme-studio="true"] body div:has(> nav[role="navigation"]) {
-  background-color: color-mix(in srgb, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91)) calc(var(--gpts-transparency, 79) * 1%), transparent) !important;
+  background-color: var(--gpts-surface-strong-effective, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91))) !important;
   color: var(--gpts-text, #f7f5ff);
   border-color: var(--gpts-border, rgba(226, 228, 255, 0.27));
   -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
@@ -51,7 +51,7 @@ html[data-chatgpt-theme-studio="true"] body div:has(> nav[role="navigation"]) {
 html[data-chatgpt-theme-studio="true"] header,
 html[data-chatgpt-theme-studio="true"] [data-testid*="conversation-header"],
 html[data-chatgpt-theme-studio="true"] [data-testid*="header"] {
-  background-color: color-mix(in srgb, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91)) 62%, transparent) !important;
+  background-color: var(--gpts-surface-strong-effective, var(--gpts-surface-strong, rgba(25, 34, 69, 0.62))) !important;
   color: var(--gpts-text, #f7f5ff);
   border-color: var(--gpts-border, rgba(226, 228, 255, 0.27));
   -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
@@ -61,7 +61,7 @@ html[data-chatgpt-theme-studio="true"] [data-testid*="header"] {
 /* Conversation messages: glass treatment only on semantic message roots. */
 html[data-chatgpt-theme-studio="true"] [data-message-author-role],
 html[data-chatgpt-theme-studio="true"] [data-testid*="conversation-turn"] {
-  background-color: color-mix(in srgb, var(--gpts-surface, rgba(30, 42, 86, 0.79)) calc(var(--gpts-transparency, 79) * 1%), transparent) !important;
+  background-color: var(--gpts-surface-effective, var(--gpts-surface, rgba(30, 42, 86, 0.79))) !important;
   border: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
   border-radius: 18px;
   box-shadow: 0 8px 28px var(--gpts-shadow, rgba(5, 9, 34, 0.24));
@@ -72,7 +72,7 @@ html[data-chatgpt-theme-studio="true"] [data-testid*="conversation-turn"] {
 /* Composer styling is limited to known composer wrappers and forms. */
 html[data-chatgpt-theme-studio="true"] [class*="ComposerLayoutRoot-"],
 html[data-chatgpt-theme-studio="true"] main form {
-  background-color: color-mix(in srgb, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91)) calc(var(--gpts-transparency, 79) * 1%), transparent) !important;
+  background-color: var(--gpts-surface-strong-effective, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91))) !important;
   color: var(--gpts-text, #f7f5ff);
   border: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
   border-radius: 24px;
