@@ -4,6 +4,7 @@
   const WRAPPER_ATTRIBUTE = "data-gpts-wallpaper-wrapper";
   let observer = null;
   let scanQueued = false;
+  let resizeListenerAdded = false;
 
   function clamp(value, min, max, fallback) {
     const n = Number(value);
@@ -131,7 +132,10 @@
       if (records.some(record => record.type === "childList" || (record.type === "attributes" && record.target !== root()))) queueWrapperScan();
     });
     observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style"] });
-    window.addEventListener("resize", queueWrapperScan, { passive: true });
+    if (!resizeListenerAdded) {
+      window.addEventListener("resize", queueWrapperScan, { passive: true });
+      resizeListenerAdded = true;
+    }
   }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
