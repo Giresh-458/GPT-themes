@@ -1,8 +1,6 @@
 (() => {
   "use strict";
-
   const ROOT_ATTRIBUTE = "data-chatgpt-theme-studio";
-  const WALLPAPER_MESSAGE = "CHATGPT_THEME_STUDIO_SET_WALLPAPER";
 
   function clamp(value, min, max, fallback) {
     const n = Number(value);
@@ -30,17 +28,18 @@
     document.documentElement.style.setProperty("--gpts-transparency", String(clamp(custom.transparency, 45, 96, 79)));
     document.documentElement.style.setProperty("--gpts-border-strength", String(clamp(custom.borderStrength, 0, 2, 1)));
     document.documentElement.style.setProperty("--gpts-shadow-strength", String(clamp(custom.shadowStrength, 0, 2, 1)));
-    document.documentElement.style.setProperty("--gpts-wallpaper", "none");
   }
 
+  function setDataUrl(dataUrl) {
+    document.documentElement.style.setProperty("--gpts-wallpaper", 'url("' + dataUrl + '")');
+  }
   function reset() {
     document.documentElement.removeAttribute(ROOT_ATTRIBUTE);
     for (const name of [
-      "--gpts-text", "--gpts-muted", "--gpts-surface",
-      "--gpts-surface-strong", "--gpts-border", "--gpts-accent",
-      "--gpts-shadow", "--gpts-blur", "--gpts-overlay",
-      "--gpts-transparency", "--gpts-border-strength", "--gpts-shadow-strength",
-      "--gpts-wallpaper"
+      "--gpts-text", "--gpts-muted", "--gpts-surface", "--gpts-surface-strong",
+      "--gpts-border", "--gpts-accent", "--gpts-shadow", "--gpts-blur",
+      "--gpts-overlay", "--gpts-transparency", "--gpts-border-strength",
+      "--gpts-shadow-strength", "--gpts-wallpaper"
     ]) document.documentElement.style.removeProperty(name);
   }
 
@@ -51,10 +50,10 @@
     } else if (message?.type === "CHATGPT_THEME_STUDIO_RESET") {
       reset();
       sendResponse({ ok: true });
-    } else if (message?.type === WALLPAPER_MESSAGE) {
+    } else if (message?.type === "CHATGPT_THEME_STUDIO_SET_WALLPAPER") {
       const url = message.dataUrl;
-      if (typeof url === "string" && /^data:image\/(png|jpeg|webp|svg\+xml);base64,/.test(url)) {
-        document.documentElement.style.setProperty("--gpts-wallpaper", 'url("' + url + '")');
+      if (typeof url === "string" && /^data:image\/(png|jpeg|webp);base64,/.test(url)) {
+        setDataUrl(url);
         sendResponse({ ok: true });
       } else {
         sendResponse({ ok: false, error: "Invalid local wallpaper data." });
@@ -64,10 +63,10 @@
       sendResponse({ ok: true });
     } else if (message?.type === "CHATGPT_THEME_STUDIO_SET_BUILTIN_WALLPAPER") {
       const svg = message.svg;
-      // SVG comes from the extension's bundled static theme definitions, not the page.
-      if (typeof svg === "string" && svg.length < 100_000 && svg.startsWith("<svg ")) {
+      // This SVG is packaged in the extension source, not collected from the website.
+      if (typeof svg === "string" && svg.length < 90000 && svg.startsWith("<svg ")) {
         const dataUrl = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
-        document.documentElement.style.setProperty("--gpts-wallpaper", 'url("' + dataUrl + '")');
+        setDataUrl(dataUrl);
         sendResponse({ ok: true });
       } else {
         sendResponse({ ok: false, error: "Invalid built-in wallpaper." });
