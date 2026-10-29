@@ -5,6 +5,7 @@
   const SIDEBAR_ATTRIBUTE = "data-gpts-sidebar-root";
   let observer = null;
   let scanQueued = false;
+  let scanTimer = null;
   let resizeListenerAdded = false;
 
   function clamp(value, min, max, fallback) {
@@ -72,6 +73,9 @@
   function reset() {
     if (observer) observer.disconnect();
     observer = null;
+    if (scanTimer !== null) clearTimeout(scanTimer);
+    scanTimer = null;
+    scanQueued = false;
     document.querySelectorAll("[" + WRAPPER_ATTRIBUTE + '="true"]').forEach(el => el.removeAttribute(WRAPPER_ATTRIBUTE));
     document.querySelectorAll("[" + SIDEBAR_ATTRIBUTE + '="true"]').forEach(el => el.removeAttribute(SIDEBAR_ATTRIBUTE));
     root().removeAttribute(ROOT_ATTRIBUTE);
@@ -144,16 +148,31 @@
   }
 
   function queueWrapperScan() {
-    if (scanQueued) return;
-    scanQueued = true;
-    requestAnimationFrame(scanWallpaperOccluders);
+    if (scanQueued || scanTimer !== null) return;
+    // Coalesce React's frequent mutations so large-page style inspection cannot
+    // run once per animation frame while a conversation is streaming.
+    scanTimer = setTimeout(() => {
+      scanTimer = null;
+      scanQueued = true;
+      requestAnimationFrame(() => {
+        scanQueued = false;
+        scanWallpaperOccluders();
+      });
+    }, 120);
+  }
+
+  function mutationCanAffectLayout(record) {
+    const target = record.target instanceof Element ? record.target : record.target.parentElement;
+    if (!target) return false;
+    if (target.closest("[data-message-author-role], [data-testid*='conversation-turn'], [role='textbox'], [contenteditable='true'], form, [class*='Composer'], [class*='Prose'], [class*='markdown']")) return false;
+    return record.type === "childList" || (record.type === "attributes" && target !== root());
   }
 
   function startWrapperObserver() {
     if (observer || !document.documentElement) return;
     observer = new MutationObserver(records => {
       if (!root().hasAttribute(ROOT_ATTRIBUTE)) return;
-      if (records.some(record => record.type === "childList" || (record.type === "attributes" && record.target !== root()))) queueWrapperScan();
+      if (records.some(mutationCanAffectLayout)) queueWrapperScan();
     });
     observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style"] });
     if (!resizeListenerAdded) {
