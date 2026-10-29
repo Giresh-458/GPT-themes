@@ -5,10 +5,10 @@ const $ = id => document.getElementById(id);
 let committed = await loadSettings();
 let draft = structuredClone(committed);
 let previewTimer = null;
-let wallpaperChanged = false;
+let toastTimer = null;
+let newlyUploadedWallpaper = null;
 const saveStatus = $("saveStatus");
 const toast = $("toast");
-let toastTimer = null;
 
 function tell(message, isError = false) {
   toast.textContent = message;
@@ -41,7 +41,7 @@ function renderThemes() {
     button.append(swatch, name);
     button.addEventListener("click", async () => {
       draft.activeThemeId = theme.id;
-      if (!wallpaperChanged && draft.wallpaper.kind !== "custom") draft.wallpaper = { kind: "built-in", id: theme.wallpaper };
+      if (draft.wallpaper.kind !== "custom") draft.wallpaper = { kind: "built-in", id: theme.wallpaper };
       syncControls();
       await previewDraft();
     });
@@ -55,7 +55,9 @@ function syncControls() {
   $("transparencyValue").value = draft.customizations.transparency + "%";
   $("blurValue").value = draft.customizations.blur + " px";
   $("overlayValue").value = Math.round(draft.customizations.overlay * 100) + "%";
-  $("wallpaperStatus").textContent = draft.wallpaper.kind === "custom" ? "Custom wallpaper stored locally." : "Built-in atmosphere selected.";
+  $("wallpaperStatus").textContent = draft.wallpaper.kind === "custom"
+    ? "Custom wallpaper stored locally."
+    : "Built-in atmosphere selected.";
   renderThemes();
   renderPresets();
   $("applyChanges").disabled = !isDirty();
@@ -65,11 +67,14 @@ async function sendToActiveTab(message) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id || !/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//.test(tab.url || "")) return;
   try { await chrome.tabs.sendMessage(tab.id, message); }
-  catch { /* If opened before install, reload the ChatGPT tab to inject the content script. */ }
+  catch { /* Reload the target tab if it was open before extension installation. */ }
 }
 async function applyVisual(settings) {
   const theme = getTheme(settings);
-  await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_APPLY", settings: { theme, customizations: settings.customizations } });
+  await sendToActiveTab({
+    type: "CHATGPT_THEME_STUDIO_APPLY",
+    settings: { theme, customizations: settings.customizations }
+  });
   const url = await getWallpaperDataUrl(settings.wallpaper);
   if (url) await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_WALLPAPER", dataUrl: url });
   else await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_CLEAR_WALLPAPER" });
@@ -79,14 +84,19 @@ async function previewDraft() {
   try {
     await applyVisual(draft);
     syncControls();
-  } catch (error) { tell("Preview failed: " + error.message, true); }
+  } catch (error) {
+    tell("Preview failed: " + error.message, true);
+  }
 }
 async function commitDraft() {
   try {
     setStatus("Saving…");
     committed = await saveSettings(draft);
     draft = structuredClone(committed);
-    wallpaperChanged = false;
+    if (newlyUploadedWallpaper && newlyUploadedWallpaper.id !== committed.wallpaper.id) {
+      await deleteWallpaper(newlyUploadedWallpaper);
+    }
+    newlyUploadedWallpaper = null;
     await applyVisual(committed);
     syncControls();
     setStatus("Saved");
@@ -97,8 +107,12 @@ async function commitDraft() {
   }
 }
 async function cancelDraft() {
+  clearTimeout(previewTimer);
   draft = structuredClone(committed);
-  wallpaperChanged = false;
+  if (newlyUploadedWallpaper) {
+    try { await deleteWallpaper(newlyUploadedWallpaper); } catch { /* keep saved settings intact */ }
+  }
+  newlyUploadedWallpaper = null;
   syncControls();
   await applyVisual(committed);
   setStatus("Restored");
@@ -121,16 +135,18 @@ function renderPresets() {
     const name = document.createElement("span");
     name.textContent = preset.name;
     const use = document.createElement("button");
-    use.type = "button"; use.textContent = "Preview";
+    use.type = "button";
+    use.textContent = "Preview";
     use.addEventListener("click", async () => {
       draft.activeThemeId = preset.settings.activeThemeId;
       draft.customizations = structuredClone(preset.settings.customizations);
       draft.wallpaper = structuredClone(preset.settings.wallpaper);
-      wallpaperChanged = true;
-      syncControls(); await previewDraft();
+      syncControls();
+      await previewDraft();
     });
     const rename = document.createElement("button");
-    rename.type = "button"; rename.textContent = "Rename";
+    rename.type = "button";
+    rename.textContent = "Rename";
     rename.addEventListener("click", async () => {
       const next = window.prompt("Rename preset", preset.name);
       if (next === null) return;
@@ -140,11 +156,13 @@ function renderPresets() {
       await commitDraft();
     });
     const remove = document.createElement("button");
-    remove.type = "button"; remove.textContent = "Delete";
+    remove.type = "button";
+    remove.textContent = "Delete";
     remove.addEventListener("click", async () => {
       if (!window.confirm(`Delete “${preset.name}”? This does not affect your current theme.`)) return;
       draft.customPresets = draft.customPresets.filter(p => p.id !== preset.id);
-      syncControls(); await commitDraft();
+      syncControls();
+      await commitDraft();
     });
     item.append(name, use, rename, remove);
     list.append(item);
@@ -163,6 +181,8 @@ for (const [id, key, divisor] of [
     $("blurValue").value = draft.customizations.blur + " px";
     $("overlayValue").value = Math.round(draft.customizations.overlay * 100) + "%";
     setStatus("Preview only");
+    $("applyChanges").disabled = false;
+    $("cancelChanges").disabled = false;
     clearTimeout(previewTimer);
     previewTimer = setTimeout(() => previewDraft(), 120);
   });
@@ -173,13 +193,16 @@ $("wallpaperFile").addEventListener("change", async event => {
   if (!file) return;
   try {
     const wallpaper = await saveWallpaper(file);
-    if (wallpaperChanged && draft.wallpaper.kind === "custom") await deleteWallpaper(draft.wallpaper);
+    if (newlyUploadedWallpaper) {
+      try { await deleteWallpaper(newlyUploadedWallpaper); } catch { /* temporary asset cleanup is best effort */ }
+    }
+    newlyUploadedWallpaper = wallpaper;
     draft.wallpaper = wallpaper;
-    wallpaperChanged = true;
     await previewDraft();
     tell("Wallpaper selected for preview. Apply to save.");
-  } catch (error) { tell(error.message, true); }
-  finally { event.target.value = ""; }
+  } catch (error) {
+    tell(error.message, true);
+  } finally { event.target.value = ""; }
 });
 
 $("savePreset").addEventListener("click", async () => {
@@ -187,7 +210,8 @@ $("savePreset").addEventListener("click", async () => {
   if (!name) return tell("Enter a name for this preset.", true);
   if (draft.customPresets.length >= 50) return tell("Preset limit reached (50).", true);
   draft.customPresets.push({
-    id: crypto.randomUUID(), name: name.slice(0, 60),
+    id: crypto.randomUUID(),
+    name: name.slice(0, 60),
     settings: {
       activeThemeId: draft.activeThemeId,
       customizations: structuredClone(draft.customizations),
@@ -203,8 +227,8 @@ $("applyChanges").addEventListener("click", commitDraft);
 $("cancelChanges").addEventListener("click", cancelDraft);
 $("resetButton").addEventListener("click", async () => {
   if (!window.confirm("Reset current settings to Twilight Glass? Saved presets will remain.")) return;
+  clearTimeout(previewTimer);
   draft = structuredClone(DEFAULT_SETTINGS);
-  wallpaperChanged = true;
   syncControls();
   await previewDraft();
   await commitDraft();
@@ -215,8 +239,11 @@ $("resetButton").addEventListener("click", async () => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if ((area === "sync" || area === "local") && changes.themeStudioSettings) {
     loadSettings().then(settings => {
-      committed = settings; draft = structuredClone(settings);
-      syncControls(); applyVisual(committed);
+      committed = settings;
+      draft = structuredClone(settings);
+      newlyUploadedWallpaper = null;
+      syncControls();
+      applyVisual(committed);
     });
   }
 });
