@@ -1,4 +1,4 @@
-import { THEMES, DEFAULT_SETTINGS, WALLPAPERS, getTheme, sanitizeSettings } from "../src/themes.js";
+import { THEMES, DEFAULT_SETTINGS, WALLPAPERS, REMOTE_WALLPAPERS, getTheme, sanitizeSettings } from "../src/themes.js";
 import { loadSettings, saveSettings, resetSettings, saveWallpaper, getWallpaperDataUrl, deleteWallpaper } from "../src/storage.js";
 
 const $ = id => document.getElementById(id);
@@ -86,7 +86,13 @@ async function applyVisual(settings) {
     }
     tell("Saved custom wallpaper is unavailable on this device. Using the bundled wallpaper.", true);
   }
-  const svg = WALLPAPERS[settings.wallpaper?.id] || WALLPAPERS[theme.wallpaper] || WALLPAPERS.twilight;
+  const wallpaperId = settings.wallpaper?.id || theme.wallpaper;
+  const remoteUrl = REMOTE_WALLPAPERS[wallpaperId];
+  if (remoteUrl) {
+    await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_REMOTE_WALLPAPER", url: remoteUrl });
+    return;
+  }
+  const svg = WALLPAPERS[wallpaperId] || WALLPAPERS[theme.wallpaper] || WALLPAPERS.twilight;
   await sendToActiveTab({ type: "CHATGPT_THEME_STUDIO_SET_BUILTIN_WALLPAPER", svg });
 }
 async function previewDraft() {
