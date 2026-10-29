@@ -56,8 +56,11 @@ html[data-chatgpt-theme-studio="true"] main {
  * an opaque slab over main's wallpaper. No dimensions/position/z-index changes.
  */
 html[data-chatgpt-theme-studio="true"] main [class*="MainContentClip"],
-html[data-chatgpt-theme-studio="true"] main [class*="Workspace-"] {
+html[data-chatgpt-theme-studio="true"] main [class*="Workspace-"],
+/* Top-level route/layout wrappers may paint an opaque band over the wallpaper. */
+html[data-chatgpt-theme-studio="true"] main > div {
   background-color: transparent !important;
+  background-image: none !important;
 }
 
 /* Composer root is optional across routes; keep its layout and stacking intact. */
