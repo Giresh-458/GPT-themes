@@ -1,4 +1,13 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const manifest = JSON.parse(readFileSync(new URL("../manifest.json", import.meta.url), "utf8"));
+assert.equal(manifest.manifest_version, 3, "extension must use Manifest V3");
+assert.equal(manifest.background?.service_worker, "background.js", "saved themes must restore through the service worker");
+assert.equal(manifest.background?.type, "module", "service worker must support ES module imports");
+assert.ok(manifest.permissions.includes("storage"), "storage permission is required");
+assert.ok(manifest.content_scripts.some(script => script.matches.includes("https://chatgpt.com/*")), "content script must target ChatGPT");
+console.log("PASS: extension manifest and persistent theme restoration wiring");
 import { DEFAULT_SETTINGS, THEMES, WALLPAPERS, REMOTE_WALLPAPERS, sanitizeSettings, clampNumber, getTheme } from "../src/themes.js";
 
 assert.equal(THEMES.length, 5, "exactly five built-in themes");
