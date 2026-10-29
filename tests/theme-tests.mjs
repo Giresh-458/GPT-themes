@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { DEFAULT_SETTINGS, THEMES, sanitizeSettings, clampNumber, getTheme } from "../src/themes.js";
+import { DEFAULT_SETTINGS, THEMES, WALLPAPERS, REMOTE_WALLPAPERS, sanitizeSettings, clampNumber, getTheme } from "../src/themes.js";
 
 assert.equal(THEMES.length, 5, "exactly five built-in themes");
 assert.equal(new Set(THEMES.map(t => t.id)).size, 5, "theme IDs must be unique");
@@ -31,3 +31,7 @@ for (const theme of THEMES) {
   assert.ok(theme.transparency >= 45 && theme.transparency <= 96);
 }
 console.log("PASS: theme configuration and sanitization tests");
+assert.ok(WALLPAPERS.aurora.startsWith("<svg "), "bundled SVG wallpaper remains available");
+assert.ok(REMOTE_WALLPAPERS.twilight.startsWith("https://images.unsplash.com/"), "Twilight photo wallpaper uses the expected static image host");
+assert.ok(REMOTE_WALLPAPERS.twilight.includes("photo-1776348568867-24146d18b736"), "Twilight photo path is stable and allowlisted");
+console.log("PASS: wallpaper configuration");
