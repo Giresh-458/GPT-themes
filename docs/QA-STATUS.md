@@ -94,4 +94,8 @@ Next: reload the unpacked extension (not just the ChatGPT tab), reload ChatGPT, 
 ## Screenshot follow-up (2026-10-29)
 The user's latest screenshot shows that the selected SVG wallpaper now renders on the main page, but opaque dark/black child surfaces still cover a wide central band. This indicates wallpaper loading works; remaining issue is child wrapper backgrounds obscuring it. Updated `content/theme.css` to make the previously observed `MainContentClip-*` and `Workspace-*` wrappers transparent while preserving layout, positioning, scrolling, and z-index. This is a targeted hypothesis based on the earlier live DOM chain, not yet verified in Chrome. Reload the extension and page, then check the central band and composer behavior. Do not mark fixed until verified.
 
+
+## Latest central-band adjustment (2026-10-29)
+The latest screenshot shows the wallpaper painting on the top and bottom portions of the main page while a wide opaque dark band remains behind the landing prompt and composer. This confirms the image is loaded but an app-owned main child is painting over it. Updated `content/theme.css` on `main` to make direct child `div` route/layout wrappers transparent, in addition to the previously inspected MainContentClip/Workspace wrappers. This is a targeted CSS hypothesis based on the screenshot; it has not yet been browser-verified and could affect a route whose direct child intentionally uses a background. Verify landing page, conversation messages, cards, and composer after reload. If it causes regressions, narrow the selector using a fresh DOM inspection.
+
 Do not report any unverified requirement as complete.
