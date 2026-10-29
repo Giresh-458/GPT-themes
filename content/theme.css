@@ -1,141 +1,102 @@
 /*
- * ChatGPT Theme Studio — evidence-backed wallpaper and glass surfaces.
- * Live selectors vary by ChatGPT route/authentication state; keep selectors
- * narrow and do not alter app-owned geometry or editor interaction behavior.
+ * ChatGPT Theme Studio — full-page glassmorphism layer.
+ * Scoped to pages where the extension has explicitly enabled a theme.
+ * Do not change app layout geometry, pointer events, or editor behavior.
  */
-:root[data-chatgpt-theme-studio="true"] {
-  --gpts-wallpaper-overlay: var(--gpts-overlay, 0.26);
+html[data-chatgpt-theme-studio="true"],
+html[data-chatgpt-theme-studio="true"] body {
+  background: transparent !important;
   color: var(--gpts-text, #f7f5ff);
 }
 
-/* Decorative fallback layer; main also receives the wallpaper directly below. */
-:root[data-chatgpt-theme-studio="true"]::before {
+/* One viewport-wide wallpaper layer; no remote image requests. */
+html[data-chatgpt-theme-studio="true"] body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
-  background: var(--gpts-wallpaper, none) center / cover no-repeat;
-  opacity: calc(1 - var(--gpts-wallpaper-overlay));
+  background-image: var(--gpts-wallpaper, none);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: calc(1 - var(--gpts-overlay, 0.26));
 }
 
-/* Sidebar: only color/decoration changes, never width, padding, or scrolling. */
-html[data-chatgpt-theme-studio="true"] aside.app-shell-left-panel {
-  background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.93)) !important;
+/* The app's outer layout must not paint a solid page over the wallpaper. */
+html[data-chatgpt-theme-studio="true"] main,
+html[data-chatgpt-theme-studio="true"] [class*="MainContentSurface"],
+html[data-chatgpt-theme-studio="true"] [class*="MainContentClip"],
+html[data-chatgpt-theme-studio="true"] [class*="Workspace-"],
+html[data-chatgpt-theme-studio="true"] [class*="ComposerModeSurface-"] {
+  background-color: transparent !important;
+  background-image: none !important;
   color: var(--gpts-text, #f7f5ff);
-  border-right: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
+}
+
+/* Sidebar targets across authenticated and logged-out ChatGPT layouts. */
+html[data-chatgpt-theme-studio="true"] aside,
+html[data-chatgpt-theme-studio="true"] [class*="LeftPanel-"],
+html[data-chatgpt-theme-studio="true"] [class*="ResponsiveLeftPanel-"],
+html[data-chatgpt-theme-studio="true"] [class*="sidebar-navigation"],
+html[data-chatgpt-theme-studio="true"] body div:has(> nav[role="navigation"]) {
+  background-color: color-mix(in srgb, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91)) calc(var(--gpts-transparency, 79) * 1%), transparent) !important;
+  color: var(--gpts-text, #f7f5ff);
+  border-color: var(--gpts-border, rgba(226, 228, 255, 0.27));
   -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
 
-html[data-chatgpt-theme-studio="true"] nav[role="navigation"] {
-  background-color: transparent !important;
-  color: inherit;
-}
-
-/*
- * Wallpaper on main makes it visible even when root pseudo-elements are
- * behind app stacking contexts. A translucent gradient sits over the image.
- */
-html[data-chatgpt-theme-studio="true"] main {
-  background-color: var(--gpts-surface, rgba(30, 42, 86, 0.79)) !important;
-  background-image:
-    linear-gradient(var(--gpts-surface, rgba(30, 42, 86, 0.79)), var(--gpts-surface, rgba(30, 42, 86, 0.79))),
-    var(--gpts-wallpaper, none) !important;
-  background-position: center center, center center;
-  background-repeat: no-repeat, no-repeat;
-  background-size: cover, cover;
+/* Top navigation/header should read as a glass strip, not a black bar. */
+html[data-chatgpt-theme-studio="true"] header,
+html[data-chatgpt-theme-studio="true"] [data-testid*="conversation-header"],
+html[data-chatgpt-theme-studio="true"] [data-testid*="header"] {
+  background-color: color-mix(in srgb, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91)) 62%, transparent) !important;
   color: var(--gpts-text, #f7f5ff);
-  -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(125%);
-  backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(125%);
+  border-color: var(--gpts-border, rgba(226, 228, 255, 0.27));
+  -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
+  backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
 
-/*
- * Earlier live inspection found these wrappers transparent in one route.
- * Force transparency only on the known layout wrappers, so they don't paint
- * an opaque slab over main's wallpaper. No dimensions/position/z-index changes.
- */
-html[data-chatgpt-theme-studio="true"] main [class*="MainContentClip"],
-html[data-chatgpt-theme-studio="true"] main [class*="Workspace-"],
-/* Top-level route/layout wrappers may paint an opaque band over the wallpaper. */
-html[data-chatgpt-theme-studio="true"] main > div {
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
-/* Composer root is optional across routes; keep its layout and stacking intact. */
-html[data-chatgpt-theme-studio="true"] [class*="ComposerLayoutRoot-"] {
-  background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.93)) !important;
-  color: var(--gpts-text, #f7f5ff);
+/* Conversation messages: glass treatment only on semantic message roots. */
+html[data-chatgpt-theme-studio="true"] [data-message-author-role],
+html[data-chatgpt-theme-studio="true"] [data-testid*="conversation-turn"] {
+  background-color: color-mix(in srgb, var(--gpts-surface, rgba(30, 42, 86, 0.79)) calc(var(--gpts-transparency, 79) * 1%), transparent) !important;
   border: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
   border-radius: 18px;
-  box-shadow: 0 8px 28px var(--gpts-shadow, rgba(5, 9, 34, 0.34));
-  -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
-  backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
-}
-
-/* Preserve editor dimensions, positioning, overflow, and interaction behavior. */
-html[data-chatgpt-theme-studio="true"] div[role="textbox"].ProseMirror[contenteditable="true"] {
-  background-color: transparent !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :root[data-chatgpt-theme-studio="true"] {
-    scroll-behavior: auto;
-  }
-}
-
-/*
- * Cross-layout fallback added after comparing the actual landing-page
- * screenshot with the intended glass UI. Logged-out ChatGPT layouts do not
- * always expose app-shell-left-panel / ComposerLayoutRoot-* classes. The
- * black horizontal band was painted by nested main-content divs, so clear
- * their opaque paints while leaving native buttons/inputs and geometry alone.
- */
-html[data-chatgpt-theme-studio="true"] aside {
-  background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.78)) !important;
-  color: var(--gpts-text, #f7f5ff);
-  -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
-  backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
-}
-
-html[data-chatgpt-theme-studio="true"] main div:not([class*="ComposerLayoutRoot-"]) {
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
-/* Preserve glass on known composer and semantic conversation surfaces. */
-html[data-chatgpt-theme-studio="true"] main form,
-html[data-chatgpt-theme-studio="true"] main [role="textbox"],
-html[data-chatgpt-theme-studio="true"] main [contenteditable="true"] {
-  color: var(--gpts-text, #f7f5ff);
-}
-
-html[data-chatgpt-theme-studio="true"] main [data-message-author-role],
-html[data-chatgpt-theme-studio="true"] main article,
-html[data-chatgpt-theme-studio="true"] main [data-testid*="conversation-turn"] {
-  background-color: var(--gpts-surface, rgba(30, 42, 86, 0.79)) !important;
-  border: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
-  border-radius: 16px;
+  box-shadow: 0 8px 28px var(--gpts-shadow, rgba(5, 9, 34, 0.24));
   -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(125%);
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(125%);
 }
 
-/* Landing composer: restore a legible translucent pill without changing layout. */
+/* Composer styling is limited to known composer wrappers and forms. */
+html[data-chatgpt-theme-studio="true"] [class*="ComposerLayoutRoot-"],
 html[data-chatgpt-theme-studio="true"] main form {
-  background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.78)) !important;
+  background-color: color-mix(in srgb, var(--gpts-surface-strong, rgba(25, 34, 69, 0.91)) calc(var(--gpts-transparency, 79) * 1%), transparent) !important;
+  color: var(--gpts-text, #f7f5ff);
   border: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
   border-radius: 24px;
   box-shadow: 0 8px 28px var(--gpts-shadow, rgba(5, 9, 34, 0.34));
   -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
-/* Logged-out/responsive sidebar fallback: the nav's direct layout parent. */
-html[data-chatgpt-theme-studio="true"] body div:has(> nav[role="navigation"]) {
-  background-color: var(--gpts-surface-strong, rgba(25, 34, 69, 0.78)) !important;
+
+/* Preserve editor content, dimensions, position, scrolling and input behavior. */
+html[data-chatgpt-theme-studio="true"] [role="textbox"],
+html[data-chatgpt-theme-studio="true"] [contenteditable="true"] {
   color: var(--gpts-text, #f7f5ff);
-  border-right: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
-  -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
-  backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
+  background-color: transparent !important;
 }
 
+/* A narrow runtime marker clears only large opaque layout wrappers that hide
+   the wallpaper. The content script excludes cards, messages, and controls. */
+html[data-chatgpt-theme-studio="true"] [data-gpts-wallpaper-wrapper="true"] {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-chatgpt-theme-studio="true"] {
+    scroll-behavior: auto;
+  }
+}
