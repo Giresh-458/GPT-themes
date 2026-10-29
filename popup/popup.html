@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatGPT Theme Studio</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="brand-mark" aria-hidden="true">✦</div>
+      <div class="brand-copy"><h1>Theme Studio</h1><p>Glass, made personal.</p></div>
+      <span id="saveStatus" class="status" role="status">Ready</span>
+    </header>
+    <section class="hero">
+      <div class="eyebrow">YOUR WORKSPACE</div>
+      <h2>Find your atmosphere.</h2>
+      <p>Choose a visual style, then fine-tune the glass to your taste.</p>
+    </section>
+    <section class="section">
+      <div class="section-heading"><h3>Choose a theme</h3><span>05 STYLES</span></div>
+      <div id="themeGrid" class="theme-grid" aria-label="Built-in themes"></div>
+    </section>
+    <section class="section controls-section">
+      <div class="section-heading"><h3>Glass controls</h3><button id="resetButton" class="text-button" type="button">Reset</button></div>
+      <label class="range-row"><span>Transparency <output id="transparencyValue">79%</output></span><input id="transparency" type="range" min="45" max="96" value="79"></label>
+      <label class="range-row"><span>Blur <output id="blurValue">18 px</output></span><input id="blur" type="range" min="0" max="30" value="18"></label>
+      <label class="range-row"><span>Contrast overlay <output id="overlayValue">26%</output></span><input id="overlay" type="range" min="0" max="70" value="26"></label>
+      <div class="wallpaper-row">
+        <div><strong>Wallpaper</strong><small>Local images stay on this device.</small></div>
+        <label class="upload-button">Upload<input id="wallpaperFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+      </div>
+      <p id="wallpaperStatus" class="hint">Built-in atmosphere selected.</p>
+    </section>
+    <section class="section preset-section">
+      <div class="section-heading"><h3>Your presets</h3></div>
+      <div class="preset-create"><input id="presetName" type="text" maxlength="60" placeholder="Name this look" aria-label="Preset name"><button id="savePreset" class="primary-button" type="button">Save preset</button></div>
+      <div id="presetList" class="preset-list"></div>
+    </section>
+    <section class="commit-row" aria-label="Preview changes">
+      <p>Changes are preview-only until you apply them.</p>
+      <div><button id="cancelChanges" class="secondary-button" type="button" disabled>Cancel</button><button id="applyChanges" class="primary-button" type="button" disabled>Apply changes</button></div>
+    </section>
+    <footer class="footer"><span class="privacy-dot"></span><span>Local-first. No analytics. Your chats stay yours.</span></footer>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </main>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
