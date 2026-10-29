@@ -4,7 +4,7 @@ A privacy-conscious Manifest V3 Chrome extension for a glassmorphism theme layer
 
 ## Project status
 
-This repository is being initialized from scratch. The initial implementation deliberately does **not** guess at ChatGPT's private or unstable DOM structure. The page-theme adapter remains conservative until selectors can be verified against a live authenticated ChatGPT session.
+The extension now applies a full-page wallpaper and glass surface layer using observed ChatGPT DOM patterns plus a guarded fallback for large opaque layout wrappers. ChatGPT's DOM changes over time, so the landing page, conversation view, special composer modes, and responsive layouts still require browser regression testing.
 
 ## Design principles
 
