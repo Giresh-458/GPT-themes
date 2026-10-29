@@ -4,7 +4,7 @@ Audit date: 2026-10-29
 
 ## Scope
 
-Reviewed the current `main` implementation and made a follow-up fix on `fix/persistence-and-qa-audit` for saved-theme restoration. The changes are intended for the supplied reference: a scenic wallpaper behind translucent blue/purple glass surfaces.
+Reviewed the current `main` implementation and pushed a follow-up fix for saved-theme restoration. The changes are intended for the supplied reference: a scenic wallpaper behind translucent blue/purple glass surfaces.
 
 ## Findings from source inspection
 
