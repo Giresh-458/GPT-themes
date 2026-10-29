@@ -1,0 +1,31 @@
+/*
+ * ChatGPT Theme Studio owns these tokens and background layer only.
+ * This baseline intentionally does not target unverified ChatGPT elements.
+ */
+:root[data-chatgpt-theme-studio="true"] {
+  color-scheme: dark;
+}
+
+:root[data-chatgpt-theme-studio="true"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--gpts-wallpaper, none);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: calc(1 - var(--gpts-overlay, 0.26));
+}
+
+/* Live ChatGPT selectors are intentionally omitted pending DOM evidence. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-chatgpt-theme-studio="true"] *,
+  :root[data-chatgpt-theme-studio="true"] *::before,
+  :root[data-chatgpt-theme-studio="true"] *::after {
+    scroll-behavior: auto;
+    animation-duration: 0.01ms;
+    transition-duration: 0.01ms;
+  }
+}
