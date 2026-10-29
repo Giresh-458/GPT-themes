@@ -78,4 +78,16 @@ The match-count check returned exactly one visible match for each of:
 5. Run the repository's syntax/unit checks and record actual results.
 6. Capture before/after screenshots and inspect console errors before marking the PR ready.
 
+
+## Follow-up diagnostic from the user's screenshot
+
+The user confirmed that the extension had been reloaded and a theme selected, then ran a read-only diagnostic on a later ChatGPT page state. Results:
+- Root theme attribute was `true`; wallpaper variable contained a data URL; surface was `rgba(17, 22, 39, 0.9)`; blur was `18px`; overlay was `0.26`.
+- `main` matched and computed to `rgba(17, 22, 39, 0.9)` with `blur(18px) saturate(1.25)`.
+- `aside.app-shell-left-panel`, `[class*="ComposerLayoutRoot-"]`, and the observed ProseMirror selector did not match in this later page state.
+
+This is evidence that the theme message applied variables and main CSS, but also that selectors observed earlier do not cover every ChatGPT route/authentication state. The wallpaper was not visibly obvious in the screenshot. CSS was updated to compose the wallpaper directly into the `main` background using a translucent surface layer as well as retaining the root pseudo-element fallback. This CSS change has not yet been tested by reloading the extension in Chrome; do not claim the wallpaper issue is resolved until the user verifies it.
+
+Next: reload the unpacked extension (not just the ChatGPT tab), reload ChatGPT, select a theme again, and inspect `getComputedStyle(document.querySelector('main')).backgroundImage` plus a fresh screenshot. Inspect current sidebar/composer DOM on the exact page state before adding additional selectors.
+
 Do not report any unverified requirement as complete.
