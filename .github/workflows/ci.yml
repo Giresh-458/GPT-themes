@@ -1,0 +1,27 @@
+name: Extension checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run theme tests
+        run: npm test
+      - name: Check JavaScript syntax
+        run: npm run check
+      - name: Validate manifest JSON
+        run: node -e "JSON.parse(require('node:fs').readFileSync('manifest.json', 'utf8')); console.log('PASS: manifest JSON')"
