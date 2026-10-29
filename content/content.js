@@ -2,11 +2,7 @@
   "use strict";
 
   const ROOT_ATTRIBUTE = "data-chatgpt-theme-studio";
-  const STYLE_ID = "chatgpt-theme-studio-styles";
   const WALLPAPER_MESSAGE = "CHATGPT_THEME_STUDIO_SET_WALLPAPER";
-  let latestSettings = null;
-  let observer = null;
-  let applyPending = false;
 
   function clamp(value, min, max, fallback) {
     const n = Number(value);
@@ -19,10 +15,6 @@
 
   function apply(settings) {
     if (!settings || typeof settings !== "object") return;
-    latestSettings = settings;
-
-    // The extension owns only this root marker and its own variables/style node.
-    // No page-specific element selectors are used until verified against live DOM.
     const theme = settings.theme || {};
     const custom = settings.customizations || {};
     const colors = theme.colors || {};
@@ -43,7 +35,6 @@
   }
 
   function reset() {
-    latestSettings = null;
     document.documentElement.removeAttribute(ROOT_ATTRIBUTE);
     for (const name of [
       "--gpts-text", "--gpts-muted", "--gpts-surface",
@@ -64,7 +55,6 @@
       reset();
       sendResponse({ ok: true });
     } else if (message?.type === WALLPAPER_MESSAGE) {
-      // Wallpaper value must be a validated data URL from local extension storage.
       const url = message.dataUrl;
       if (typeof url === "string" && /^data:image\/(png|jpeg|webp);base64,/.test(url)) {
         document.documentElement.style.setProperty("--gpts-wallpaper", 'url("' + url + '")');
@@ -72,18 +62,10 @@
       } else {
         sendResponse({ ok: false, error: "Invalid local wallpaper data." });
       }
+    } else if (message?.type === "CHATGPT_THEME_STUDIO_CLEAR_WALLPAPER") {
+      document.documentElement.style.removeProperty("--gpts-wallpaper");
+      sendResponse({ ok: true });
     }
     return true;
   });
-
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== "sync" && area !== "local") return;
-    if (changes.themeStudioSettings) {
-      // Popup is the source of the fully resolved settings message.
-      // This listener intentionally does not infer page selectors or modify composer state.
-    }
-  });
-
-  // Deliberately no MutationObserver: styling is currently limited to variables.
-  // This avoids repeated work and avoids interfering with React-managed DOM.
 })();
