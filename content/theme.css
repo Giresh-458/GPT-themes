@@ -47,6 +47,15 @@ html[data-chatgpt-theme-studio="true"] body div:has(> nav[role="navigation"]) {
   backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
 }
 
+/* The sidebar ancestor is identified at runtime for logged-in/logged-out layouts. */
+html[data-chatgpt-theme-studio="true"] [data-gpts-sidebar-root="true"] {
+  background-color: var(--gpts-surface-strong-effective, var(--gpts-surface-strong, rgba(25, 34, 69, 0.72))) !important;
+  color: var(--gpts-text, #f7f5ff);
+  border-right: 1px solid var(--gpts-border, rgba(226, 228, 255, 0.27));
+  -webkit-backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
+  backdrop-filter: blur(var(--gpts-blur, 18px)) saturate(135%);
+}
+
 /* Top navigation/header should read as a glass strip, not a black bar. */
 html[data-chatgpt-theme-studio="true"] header,
 html[data-chatgpt-theme-studio="true"] [data-testid*="conversation-header"],
